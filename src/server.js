@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import calendarRoutes from "./routes/calendar.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
+import dashboardRoutes from "./routes/dashboard.routes.js";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.static("public"));
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use((error, _req, res, _next) => {
   console.error(error);
