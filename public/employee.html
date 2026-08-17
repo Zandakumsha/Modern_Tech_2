@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Employee Profile | Modern Tech</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header" id="header">
+    <div class="header__container">
+      <a href="index.html" class="header__logo"><i class="ri-cloud-fill"></i><span>Modern Tech</span></a>
+      <div class="header__toggle" id="header-toggle"><i class="ri-menu-line"></i></div>
+    </div>
+  </header>
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar__container">
+      <div class="sidebar__user">
+        <div class="sidebar__img">
+          <img id="navbarProfileImage" src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg" alt="Profile Avatar" />
+        </div>
+        <div class="sidebar__info">
+          <h3 id="sidebar-user-name">Employee</h3>
+          <span id="sidebar-user-email">employee@moderntech.com</span>
+          <span class="user-profile" id="sidebar_role">Employee</span>
+        </div>
+      </div>
+
+      <div class="sidebar__content">
+        <div>
+          <h3 class="sidebar__title">EMPLOYEE</h3>
+          <div class="sidebar__list">
+            <a href="employee.html" class="sidebar__link active-link"><i class="ri-user-fill"></i><span>My Profile</span></a>
+            <a href="#" class="sidebar__link" id="emp-sidebar-leave"><i class="ri-calendar-event-line"></i><span>Request Leave</span></a>
+          </div>
+        </div>
+        <div>
+          <h3 class="sidebar__title">SYSTEM</h3>
+          <div class="sidebar__list">
+            <a href="settings.html" class="sidebar__link"><i class="ri-settings-3-fill"></i><span>Settings</span></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar__actions">
+        <div class="sidebar__theme-selector">
+          <i class="ri-moon-clear-fill sidebar__link sidebar__theme" id="theme-button"><span>Theme</span></i>
+        </div>
+        <div class="sidebar__link" id="logout-btn"><i class="ri-logout-box-r-fill"></i><span>Log Out</span></div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main container" id="main">
+    <div class="emp-page">
+      <section class="emp-page-header">
+        <div>
+          <p class="emp-eyebrow"><i class="ri-user-settings-line"></i> Employee Portal</p>
+          <h1>My Profile</h1>
+          <p class="emp-page-subtitle">Your employee information, payroll, attendance and leave activity.</p>
+        </div>
+        <div class="emp-page-header-actions">
+          <button type="button" class="emp-header-action" id="emp-header-message-btn"><i class="ri-message-3-line"></i> Message HR</button>
+          <button type="button" class="emp-header-action emp-header-primary" id="emp-header-leave-btn"><i class="ri-calendar-event-line"></i> Request Leave</button>
+        </div>
+      </section>
+
+      <div class="emp-crumbrow">
+        <div class="emp-crumb">Employee <i class="ri-arrow-right-s-line"></i> <span id="emp-username">My Profile</span></div>
+        <div class="emp-crumb-actions"><button type="button" class="emp-ghost-btn" id="emp-edit-profile-btn"><i class="ri-edit-2-line"></i> Edit profile</button></div>
+      </div>
+
+      <section class="emp-grid">
+        <article class="emp-card emp-profile-card">
+          <div class="emp-profile-left">
+            <div class="emp-avatar-photo" id="emp-profile-avatar">E</div>
+            <p class="emp-p-name" id="emp-profile-name">Loading employee...</p>
+            <p class="emp-p-mail" id="emp-profile-email">Loading...</p>
+            <div class="emp-stat-row">
+              <div class="emp-stat"><b id="emp-leave-approved" data-employee-summary="approvedLeave">0</b><span>Approved leave</span></div>
+              <div class="emp-stat"><b id="emp-leave-pending" data-employee-summary="pendingLeave">0</b><span>Pending leave</span></div>
+            </div>
+            <button type="button" class="emp-msg-btn" id="emp-send-message-btn"><i class="ri-message-3-line"></i> Send Message</button>
+          </div>
+          <div class="emp-profile-right">
+            <div class="emp-info-item"><label>Employee ID</label><div id="emp-profile-id">—</div></div>
+            <div class="emp-info-item"><label>Department</label><div id="emp-profile-department">—</div></div>
+            <div class="emp-info-item"><label>Job title</label><div id="emp-profile-position">—</div></div>
+            <div class="emp-info-item"><label>Salary</label><div id="emp-net-pay">—</div></div>
+            <div class="emp-info-item"><label>Employment history</label><div id="emp-profile-history">—</div></div>
+            <div class="emp-info-item"><label>Status</label><div><span class="emp-status-pill"><i class="ri-checkbox-blank-circle-fill"></i> Active</span></div></div>
+          </div>
+        </article>
+
+        <article class="emp-card">
+          <div class="emp-card-hd"><h3>Payroll</h3><span class="emp-see-all">Latest</span></div>
+          <div id="emp-payments-list"><p class="emp-empty">Loading payments...</p></div>
+          <div class="emp-pay-total"><span>Latest net pay</span><span id="emp-pay-total">—</span></div>
+        </article>
+
+        <article class="emp-card">
+          <div class="emp-card-hd"><h3>Attendance</h3><span class="emp-see-all">Recent</span></div>
+          <div id="emp-attendance-list"><p class="emp-empty">Loading attendance...</p></div>
+        </article>
+      </section>
+
+      <section class="emp-bottom-card">
+        <div class="emp-bottom-hd">
+          <button type="button" class="emp-tab-btn emp-tab-active">Leave requests</button>
+          <button type="button" class="emp-add-btn" id="emp-open-leave"><i class="ri-add-line"></i> Request leave</button>
+        </div>
+        <div id="emp-leave-list"><p class="emp-empty">Loading leave requests...</p></div>
+      </section>
+
+      <div class="emp-modal emp-leave-modal" id="emp-leave-modal" hidden>
+        <div class="emp-modal-content">
+          <div class="emp-modal-header"><h2>Request Leave</h2><button type="button" class="emp-modal-close" id="emp-close-leave">&times;</button></div>
+          <form class="emp-leave-form" id="emp-leave-form">
+            <div class="emp-form-row">
+              <div class="emp-form-group"><label for="emp-leave-date">Leave date</label><input type="date" id="emp-leave-date" required /></div>
+              <div class="emp-form-group"><label for="emp-leave-reason">Reason</label><select id="emp-leave-reason" required><option value="">Select reason</option><option>Vacation</option><option>Sick Leave</option><option>Personal</option><option>Family</option><option>Medical</option><option>Other</option></select></div>
+            </div>
+            <div class="emp-form-actions"><button type="button" class="emp-btn-secondary" id="emp-cancel-leave">Cancel</button><button type="submit" class="emp-btn-primary">Submit Leave Request</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="emp-modal" id="emp-edit-modal" hidden>
+        <div class="emp-modal-content">
+          <div class="emp-modal-header"><h2>Edit Profile</h2><button type="button" class="emp-modal-close" id="emp-close-edit">&times;</button></div>
+          <form class="emp-leave-form" id="emp-edit-form">
+            <div class="emp-form-row"><div class="emp-form-group"><label for="emp-edit-name">Name</label><input id="emp-edit-name" required /></div><div class="emp-form-group"><label for="emp-edit-email">Contact</label><input id="emp-edit-email" type="email" required /></div></div>
+            <div class="emp-form-row"><div class="emp-form-group"><label for="emp-edit-position">Position</label><input id="emp-edit-position" required /></div><div class="emp-form-group"><label for="emp-edit-department">Department</label><input id="emp-edit-department" required /></div></div>
+            <div class="emp-form-actions"><button type="button" class="emp-btn-secondary" id="emp-cancel-edit">Cancel</button><button type="submit" class="emp-btn-primary" id="emp-save-profile">Save Changes</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div id="toast" style="display:none"><span id="toast-message"></span></div>
+    </div>
+  </main>
+
+  <script src="js/core.js"></script>
+  <script src="js/employee.js"></script>
+</body>
+</html>
