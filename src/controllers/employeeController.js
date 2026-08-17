@@ -46,7 +46,6 @@ export async function getEmployeeForCurrentUser(req, res) {
       if (!employee) return res.status(404).json({ message: "Linked employee profile not found" });
       return res.json(employee);
     }
-
     const employee = await findEmployeeByContact(req.user.email);
     if (!employee) return res.status(404).json({ message: "Your account is not linked to an employee profile" });
     res.json(employee);
@@ -57,12 +56,13 @@ export async function createEmployeeHandler(req, res) {
   const validationError = validateEmployeePayload(req.body);
   if (validationError) return res.status(400).json({ message: validationError });
   try { res.status(201).json(await createEmployee(req.body)); }
-  catch (error) { console.error(error); res.status(error.code === "ER_DUP_ENTRY" ? 409 : 500).json({ message: error.code === "ER_DUP_ENTRY" ? "Username or email already exists" : "Error creating employee", error: error.message }); }
+  catch (error) { console.error(error); res.status(error.code === "ER_DUP_ENTRY" ? 409 : 500).json({ message: error.code === "ER_DUP_ENTRY" ? "An employee with this contact already exists" : "Error creating employee", error: error.message }); }
 }
 
 export async function updateEmployeeHandler(req, res) {
   const id = parseEmployeeId(req.params.id);
   if (!id) return res.status(400).json({ message: "Invalid employee ID" });
+  if (req.user?.employeeId && Number(req.user.employeeId) !== id && req.user.role !== "Admin") return res.status(403).json({ message: "You can only update your own employee profile" });
   const validationError = validateEmployeePayload(req.body);
   if (validationError) return res.status(400).json({ message: validationError });
   try {
@@ -84,6 +84,7 @@ export async function deleteEmployeeHandler(req, res) {
 export async function getPayroll(req, res) {
   const id = parseEmployeeId(req.params.id);
   if (!id) return res.status(400).json({ message: "Invalid employee ID" });
+  if (req.user?.employeeId && Number(req.user.employeeId) !== id && req.user.role !== "Admin") return res.status(403).json({ message: "You can only view your own payroll" });
   try { if (!(await getEmployeeById(id))) return res.status(404).json({ message: "Employee not found" }); res.json(await getEmployeePayroll(id)); }
   catch (error) { console.error(error); res.status(500).json({ message: "Error retrieving payroll", error: error.message }); }
 }
@@ -91,6 +92,7 @@ export async function getPayroll(req, res) {
 export async function getAttendance(req, res) {
   const id = parseEmployeeId(req.params.id);
   if (!id) return res.status(400).json({ message: "Invalid employee ID" });
+  if (req.user?.employeeId && Number(req.user.employeeId) !== id && req.user.role !== "Admin") return res.status(403).json({ message: "You can only view your own attendance" });
   try { if (!(await getEmployeeById(id))) return res.status(404).json({ message: "Employee not found" }); res.json(await getEmployeeAttendance(id)); }
   catch (error) { console.error(error); res.status(500).json({ message: "Error retrieving attendance", error: error.message }); }
 }
@@ -98,6 +100,7 @@ export async function getAttendance(req, res) {
 export async function getLeave(req, res) {
   const id = parseEmployeeId(req.params.id);
   if (!id) return res.status(400).json({ message: "Invalid employee ID" });
+  if (req.user?.employeeId && Number(req.user.employeeId) !== id && req.user.role !== "Admin") return res.status(403).json({ message: "You can only view your own leave requests" });
   try { if (!(await getEmployeeById(id))) return res.status(404).json({ message: "Employee not found" }); res.json(await getEmployeeLeave(id)); }
   catch (error) { console.error(error); res.status(500).json({ message: "Error retrieving leave requests", error: error.message }); }
 }
@@ -117,6 +120,7 @@ export async function requestLeave(req, res) {
 export async function getSummary(req, res) {
   const id = parseEmployeeId(req.params.id);
   if (!id) return res.status(400).json({ message: "Invalid employee ID" });
+  if (req.user?.employeeId && Number(req.user.employeeId) !== id && req.user.role !== "Admin") return res.status(403).json({ message: "You can only view your own employee summary" });
   try {
     const summary = await getEmployeeSummary(id);
     if (!summary) return res.status(404).json({ message: "Employee not found" });
