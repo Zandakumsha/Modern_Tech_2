@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.css" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Modern Tech | Employee Portal</title>
+    <style>
+      .employee-page { min-height: 100vh; background: var(--body-color, #f8fafc); color: var(--title-color, #111827); }
+      .employee-header { height: 72px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; background:#fff; border-bottom:1px solid #e5e7eb; position:sticky; top:0; z-index:10; }
+      .employee-brand { display:flex; align-items:center; gap:10px; font-size:20px; font-weight:800; }
+      .employee-brand i { color:#00674f; font-size:26px; }
+      .employee-user { display:flex; align-items:center; gap:12px; }
+      .employee-avatar { width:42px; height:42px; border-radius:50%; object-fit:cover; }
+      .employee-layout { display:grid; grid-template-columns:230px 1fr; min-height:calc(100vh - 72px); }
+      .employee-sidebar { background:#fff; border-right:1px solid #e5e7eb; padding:22px 14px; }
+      .employee-nav { display:grid; gap:8px; }
+      .employee-nav button { border:0; background:transparent; text-align:left; padding:13px 14px; border-radius:12px; cursor:pointer; color:#475569; font:inherit; }
+      .employee-nav button:hover,.employee-nav button.active { background:#e8f4ff; color:#00674f; }
+      .employee-main { padding:30px; max-width:1250px; width:100%; box-sizing:border-box; }
+      .employee-welcome { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:26px; }
+      .employee-welcome h1 { margin:0 0 6px; font-size:32px; }
+      .employee-welcome p { margin:0; color:#64748b; }
+      .employee-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin-bottom:24px; }
+      .employee-card { background:#fff; border:1px solid #e5e7eb; border-radius:18px; padding:22px; box-shadow:0 5px 20px rgba(15,23,42,.05); }
+      .employee-card .icon { position:static; width:44px; height:44px; border-radius:12px; display:grid; place-items:center; background:#e8f4ff; color:#00674f; font-size:22px; margin-bottom:16px; }
+      .employee-card h3 { margin:0 0 7px; font-size:14px; color:#64748b; font-weight:600; }
+      .employee-card strong { font-size:25px; }
+      .employee-panels { display:grid; grid-template-columns:1.4fr 1fr; gap:18px; }
+      .employee-panel h2 { margin:0 0 18px; font-size:20px; }
+      .employee-list { display:grid; gap:12px; }
+      .employee-row { display:flex; justify-content:space-between; gap:15px; padding:14px 0; border-bottom:1px solid #eef2f7; }
+      .employee-row:last-child { border-bottom:0; }
+      .employee-badge { display:inline-flex; padding:5px 10px; border-radius:999px; background:#dcfce7; color:#166534; font-size:12px; font-weight:700; }
+      .employee-actions { display:flex; flex-wrap:wrap; gap:10px; }
+      .employee-btn { border:0; border-radius:10px; padding:11px 15px; background:#00674f; color:#fff; cursor:pointer; font:inherit; }
+      .employee-btn.secondary { background:#eef2f7; color:#334155; }
+      .employee-section { display:none; }
+      .employee-section.active { display:block; }
+      @media(max-width:900px){ .employee-grid{grid-template-columns:repeat(2,1fr)} .employee-panels{grid-template-columns:1fr} .employee-layout{grid-template-columns:1fr} .employee-sidebar{border-right:0;border-bottom:1px solid #e5e7eb} .employee-nav{grid-template-columns:repeat(3,1fr)} }
+      @media(max-width:600px){ .employee-grid{grid-template-columns:1fr} .employee-main{padding:20px 14px} .employee-header{padding:0 14px} .employee-nav{grid-template-columns:repeat(2,1fr)} .employee-welcome{align-items:flex-start;flex-direction:column} }
+    </style>
+  </head>
+  <body class="employee-page">
+    <header class="employee-header">
+      <div class="employee-brand"><i class="ri-cloud-fill"></i><span>Modern Tech Employee Portal</span></div>
+      <div class="employee-user"><span id="employeeUserName">Employee</span><img id="employeeAvatar" class="employee-avatar" alt="Employee avatar" /></div>
+    </header>
+
+    <div class="employee-layout">
+      <aside class="employee-sidebar">
+        <nav class="employee-nav">
+          <button class="active" data-section="employeeDashboard"><i class="ri-dashboard-line"></i> Dashboard</button>
+          <button data-section="employeeProfile"><i class="ri-user-line"></i> My Profile</button>
+          <button data-section="employeeAttendance"><i class="ri-calendar-check-line"></i> Attendance</button>
+          <button data-section="employeeLeave"><i class="ri-calendar-event-line"></i> Leave</button>
+          <button data-section="employeePayroll"><i class="ri-money-dollar-circle-line"></i> Payslips</button>
+        </nav>
+      </aside>
+
+      <main class="employee-main">
+        <section id="employeeDashboard" class="employee-section active">
+          <div class="employee-welcome"><div><h1>Welcome back, <span id="employeeWelcomeName">Employee</span>!</h1><p>Here is a quick overview of your employee portal.</p></div><button class="employee-btn" id="switchToHr">Switch to HR</button></div>
+          <div class="employee-grid">
+            <article class="employee-card"><div class="icon"><i class="ri-time-line"></i></div><h3>Attendance</h3><strong>96%</strong></article>
+            <article class="employee-card"><div class="icon"><i class="ri-calendar-check-line"></i></div><h3>Leave Balance</h3><strong>12 days</strong></article>
+            <article class="employee-card"><div class="icon"><i class="ri-money-dollar-circle-line"></i></div><h3>Latest Payslip</h3><strong>Available</strong></article>
+            <article class="employee-card"><div class="icon"><i class="ri-notification-3-line"></i></div><h3>Notifications</h3><strong>3 new</strong></article>
+          </div>
+          <div class="employee-panels">
+            <article class="employee-card employee-panel"><h2>Recent activity</h2><div class="employee-list"><div class="employee-row"><span>Attendance recorded for today</span><span class="employee-badge">Present</span></div><div class="employee-row"><span>February payslip</span><span class="employee-badge">Ready</span></div><div class="employee-row"><span>Annual leave request</span><span class="employee-badge">Approved</span></div></div></article>
+            <article class="employee-card employee-panel"><h2>Quick actions</h2><div class="employee-actions"><button class="employee-btn" data-section-button="employeeLeave">Request leave</button><button class="employee-btn secondary" data-section-button="employeePayroll">View payslip</button><button class="employee-btn secondary" data-section-button="employeeProfile">View profile</button></div></article>
+          </div>
+        </section>
+
+        <section id="employeeProfile" class="employee-section"><article class="employee-card"><h2>My Profile</h2><div class="employee-list"><div class="employee-row"><span>Username</span><strong id="profileUsername">-</strong></div><div class="employee-row"><span>Email</span><strong id="profileEmail">-</strong></div><div class="employee-row"><span>Role</span><strong>Employee</strong></div></div></article></section>
+        <section id="employeeAttendance" class="employee-section"><article class="employee-card"><h2>My Attendance</h2><p>Your current attendance summary.</p><div class="employee-row"><span>This month</span><strong>96% present</strong></div><div class="employee-row"><span>Today</span><span class="employee-badge">Present</span></div></article></section>
+        <section id="employeeLeave" class="employee-section"><article class="employee-card"><h2>Leave</h2><p>Manage your leave requests.</p><div class="employee-row"><span>Annual leave remaining</span><strong>12 days</strong></div><div class="employee-actions"><button class="employee-btn" onclick="alert('Leave request feature is ready to connect to the backend.')">Request leave</button></div></article></section>
+        <section id="employeePayroll" class="employee-section"><article class="employee-card"><h2>Payslips</h2><p>Access your latest payroll information.</p><div class="employee-row"><span>Latest payslip</span><span class="employee-badge">Available</span></div><div class="employee-actions"><button class="employee-btn" onclick="alert('Payslip download can be connected to the payroll API.')">View payslip</button></div></article></section>
+      </main>
+    </div>
+
+    <script>
+      const authenticated = sessionStorage.getItem("authenticated");
+      const workspace = sessionStorage.getItem("workspace");
+      if (!authenticated || workspace !== "employee") {
+        window.location.href = "login.html";
+      }
+
+      let user = null;
+      try { user = JSON.parse(localStorage.getItem("currentUser") || localStorage.getItem("user") || "null"); } catch {}
+      const name = user?.username || sessionStorage.getItem("username") || "Employee";
+      document.getElementById("employeeUserName").textContent = name;
+      document.getElementById("employeeWelcomeName").textContent = name;
+      document.getElementById("profileUsername").textContent = name;
+      document.getElementById("profileEmail").textContent = user?.email || "Not provided";
+      document.getElementById("employeeAvatar").src = user?.avatar || "https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg";
+
+      function showSection(id) {
+        document.querySelectorAll(".employee-section").forEach(section => section.classList.remove("active"));
+        document.getElementById(id)?.classList.add("active");
+        document.querySelectorAll(".employee-nav button").forEach(button => button.classList.toggle("active", button.dataset.section === id));
+      }
+      document.querySelectorAll(".employee-nav button").forEach(button => button.addEventListener("click", () => showSection(button.dataset.section)));
+      document.querySelectorAll("[data-section-button]").forEach(button => button.addEventListener("click", () => showSection(button.dataset.sectionButton)));
+      document.getElementById("switchToHr").addEventListener("click", () => {
+        sessionStorage.setItem("workspace", "hr");
+        localStorage.setItem("selectedWorkspace", "hr");
+        window.location.href = "index.html";
+      });
+    </script>
+  </body>
+</html>
