@@ -1,4 +1,5 @@
 import express from "express";
+import auth from "../middleware/auth.js";
 import {
   listEmployees,
   getEmployee,
@@ -15,16 +16,17 @@ import {
 
 const router = express.Router();
 
-router.get("/me", getEmployeeForCurrentUser);
+// The signed-in employee's profile is resolved from the JWT, not a URL ID/email.
+router.get("/me", auth, getEmployeeForCurrentUser);
 router.get("/", listEmployees);
 router.post("/", createEmployeeHandler);
 router.get("/:id", getEmployee);
-router.put("/:id", updateEmployeeHandler);
+router.put("/:id", auth, updateEmployeeHandler);
 router.delete("/:id", deleteEmployeeHandler);
-router.get("/:id/summary", getSummary);
-router.get("/:id/payroll", getPayroll);
-router.get("/:id/attendance", getAttendance);
-router.get("/:id/leave", getLeave);
-router.post("/:id/leave", requestLeave);
+router.get("/:id/summary", auth, getSummary);
+router.get("/:id/payroll", auth, getPayroll);
+router.get("/:id/attendance", auth, getAttendance);
+router.get("/:id/leave", auth, getLeave);
+router.post("/:id/leave", auth, requestLeave);
 
 export default router;
