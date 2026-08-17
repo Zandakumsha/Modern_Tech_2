@@ -3,12 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="style.css" />
-    <title>Sign in & Sign up Form</title>
+    <title>Modern Tech | Login</title>
+    <style>
+      .workspace-modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(15,23,42,.68); z-index: 9999; }
+      .workspace-modal.show { display: flex; }
+      .workspace-card { width: min(680px, 100%); padding: 36px; border-radius: 24px; background: #fff; box-shadow: 0 25px 70px rgba(0,0,0,.25); text-align: center; }
+      .workspace-card h2 { margin: 0 0 8px; color: #111827; font-size: 30px; }
+      .workspace-card p { margin: 0 0 26px; color: #64748b; }
+      .workspace-options { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+      .workspace-option { border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 18px; padding: 28px 20px; cursor: pointer; transition: .2s ease; }
+      .workspace-option:hover { transform: translateY(-3px); border-color: #00674f; box-shadow: 0 10px 25px rgba(0,0,0,.08); }
+      .workspace-option i { font-size: 38px; color: #00674f; margin-bottom: 14px; }
+      .workspace-option strong { display: block; font-size: 19px; color: #111827; margin-bottom: 6px; }
+      .workspace-option span { display: block; color: #64748b; font-size: 14px; line-height: 1.5; }
+      .workspace-cancel { margin-top: 20px; border: 0; background: transparent; color: #64748b; cursor: pointer; }
+      @media (max-width: 600px) { .workspace-options { grid-template-columns: 1fr; } .workspace-card { padding: 28px 20px; } }
+    </style>
   </head>
   <body>
     <div class="login_container">
@@ -16,99 +28,39 @@
         <div class="login_signin-signup">
           <form action="#" class="login_sign-in-form">
             <h2 class="login_title">Login</h2>
-            <div class="login_input-field">
-              <i class="fas fa-user"></i>
-              <input
-                id="login_login-username"
-                type="text"
-                placeholder="Username"
-                required
-              />
-            </div>
-            <div class="login_input-field">
-              <i class="fas fa-lock"></i>
-              <input
-                id="login_login-password"
-                type="password"
-                placeholder="Password"
-                required
-              />
-            </div>
+            <div class="login_input-field"><i class="fas fa-user"></i><input id="login_login-username" type="text" placeholder="Username" required /></div>
+            <div class="login_input-field"><i class="fas fa-lock"></i><input id="login_login-password" type="password" placeholder="Password" required /></div>
             <input type="submit" value="Login" class="login_btn login_solid" />
             <p class="login_social-text">Or Sign in with social platforms</p>
             <div class="login_social-media">
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-google"></i>
-              </a>
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-linkedin-in"></i>
-              </a>
+              <a href="#" class="login_social-icon"><i class="fab fa-google"></i></a>
+              <a href="#" class="login_social-icon"><i class="fab fa-linkedin-in"></i></a>
             </div>
           </form>
           <form action="#" class="login_sign-up-form">
             <h2 class="login_title">Sign up</h2>
-            <div class="login_input-field">
-              <i class="fas fa-user"></i>
-              <input
-                id="login_signup-username"
-                type="text"
-                placeholder="Username"
-                required
-              />
-            </div>
-            <div class="login_input-field">
-              <i class="fas fa-envelope"></i>
-              <input
-                id="login_signup-email"
-                type="email"
-                placeholder="Email"
-                required
-              />
-            </div>
-            <div class="login_input-field">
-              <i class="fas fa-lock"></i>
-              <input
-                id="login_signup-password"
-                type="password"
-                placeholder="Password"
-                required
-              />
-            </div>
+            <div class="login_input-field"><i class="fas fa-user"></i><input id="login_signup-username" type="text" placeholder="Username" required /></div>
+            <div class="login_input-field"><i class="fas fa-envelope"></i><input id="login_signup-email" type="email" placeholder="Email" required /></div>
+            <div class="login_input-field"><i class="fas fa-lock"></i><input id="login_signup-password" type="password" placeholder="Password" required /></div>
             <input type="submit" class="login_btn" value="Sign up" />
-            <p class="login_social-text">Or Sign up with social platforms</p>
-            <div class="login_social-media">
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-google"></i>
-              </a>
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-linkedin-in"></i>
-              </a>
-            </div>
           </form>
         </div>
       </div>
-
       <div class="login_panels-container">
-        <div class="login_panel login_left-panel">
-          <div class="login_content">
-            <h3>New here ?</h3>
-            <p>Sign up to our website</p>
-            <button class="login_btn login_transparent" id="login_sign-up-btn">
-              Sign UP
-            </button>
-          </div>
-          <img src="img/log.svg" class="login_image" alt="" />
+        <div class="login_panel login_left-panel"><div class="login_content"><h3>New here?</h3><p>Sign up to our website</p><button class="login_btn login_transparent" id="login_sign-up-btn">Sign UP</button></div><img src="img/log.svg" class="login_image" alt="" /></div>
+        <div class="login_panel login_right-panel"><div class="login_content"><h3>One of us?</h3><p>Login to our website</p><button class="login_btn login_transparent" id="login_sign-in-btn">Login</button></div><img src="img/register.svg" class="login_image" alt="" /></div>
+      </div>
+    </div>
+
+    <div class="workspace-modal" id="workspaceModal" aria-hidden="true">
+      <div class="workspace-card">
+        <h2>Choose your workspace</h2>
+        <p id="workspaceWelcome">Where would you like to go?</p>
+        <div class="workspace-options">
+          <button class="workspace-option" id="hrWorkspace" type="button"><i class="fas fa-user-tie"></i><strong>HR / Management</strong><span>Employees, attendance, payroll, reviews and company management.</span></button>
+          <button class="workspace-option" id="employeeWorkspace" type="button"><i class="fas fa-user"></i><strong>Employee Side</strong><span>Your profile, attendance, leave, payslips, documents and requests.</span></button>
         </div>
-        <div class="login_panel login_right-panel">
-          <div class="login_content">
-            <h3>One of us ?</h3>
-            <p>Login to our website</p>
-            <button class="login_btn login_transparent" id="login_sign-in-btn">
-              Login
-            </button>
-          </div>
-          <img src="img/register.svg" class="login_image" alt="" />
-        </div>
+        <button class="workspace-cancel" id="workspaceCancel" type="button">Cancel and return to login</button>
       </div>
     </div>
 
