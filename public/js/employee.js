@@ -13,10 +13,24 @@
     catch { return null; }
   }
 
+  function getToken() { return localStorage.getItem("authToken"); }
+
   async function apiRequest(url, options = {}) {
-    const response = await fetch(url, { ...options, headers: { "Content-Type": "application/json", ...(options.headers || {}) } });
+    const token = getToken();
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const response = await fetch(url, { ...options, headers });
     const type = response.headers.get("content-type") || "";
     const data = type.includes("application/json") ? await response.json() : await response.text();
+
+    if (response.status === 401) {
+      localStorage.removeItem("authToken");
+      sessionStorage.removeItem("authenticated");
+      window.location.href = "login.html";
+      throw new Error("Your session has expired. Please sign in again.");
+    }
+
     if (!response.ok) throw new Error(typeof data === "object" && data?.message ? data.message : `Request failed (${response.status})`);
     return data;
   }
@@ -54,16 +68,14 @@
 
   async function resolveCurrentEmployee() {
     const user = getCurrentUser();
-    if (!user?.email) throw new Error("No signed-in email was found. Please sign in again.");
+    if (!user?.email || !getToken()) throw new Error("No authenticated account was found. Please sign in again.");
 
-    employee = await apiRequest(`${API_BASE}/me?contact=${encodeURIComponent(user.email)}`);
+    // The backend reads employeeId from the verified JWT. No employee ID or email is supplied by the page.
+    employee = await apiRequest(`${API_BASE}/me`);
     employeeId = employee.employeeId;
 
-    // Cache the resolved ID only as a convenience. It is NOT used to choose another employee.
     localStorage.setItem("employeeId", String(employeeId));
-
-    // Keep the signed-in browser account linked to the actual employee record.
-    const updatedUser = { ...user, employeeId: employee.employeeId, username: employee.name, email: employee.contact, role: "Employee" };
+    const updatedUser = { ...user, employeeId: employee.employeeId, username: employee.name, email: employee.contact, role: "Staff" };
     localStorage.setItem("currentUser", JSON.stringify(updatedUser));
     localStorage.setItem("user", JSON.stringify(updatedUser));
   }
@@ -156,7 +168,7 @@
     try {
       employee = await apiRequest(`${API_BASE}/${employeeId}`, { method: "PUT", body: JSON.stringify(payload) });
       const user = getCurrentUser();
-      const updatedUser = { ...user, employeeId, username: employee.name, email: employee.contact, role: "Employee" };
+      const updatedUser = { ...user, employeeId, username: employee.name, email: employee.contact, role: "Staff" };
       localStorage.setItem("currentUser", JSON.stringify(updatedUser)); localStorage.setItem("user", JSON.stringify(updatedUser));
       renderEmployee(); closeEditProfile(); showToast("Profile updated successfully.");
     } catch (error) { showToast(error.message, "error"); }
