@@ -40,11 +40,15 @@ export async function getEmployee(req, res) {
 }
 
 export async function getEmployeeForCurrentUser(req, res) {
-  const contact = String(req.query.contact || "").trim();
-  if (!contact) return res.status(400).json({ message: "contact is required" });
   try {
-    const employee = await findEmployeeByContact(contact);
-    if (!employee) return res.status(404).json({ message: "No employee account matches this email address" });
+    if (req.user.employeeId) {
+      const employee = await getEmployeeById(req.user.employeeId);
+      if (!employee) return res.status(404).json({ message: "Linked employee profile not found" });
+      return res.json(employee);
+    }
+
+    const employee = await findEmployeeByContact(req.user.email);
+    if (!employee) return res.status(404).json({ message: "Your account is not linked to an employee profile" });
     res.json(employee);
   } catch (error) { console.error(error); res.status(500).json({ message: "Error resolving employee account", error: error.message }); }
 }
@@ -53,7 +57,7 @@ export async function createEmployeeHandler(req, res) {
   const validationError = validateEmployeePayload(req.body);
   if (validationError) return res.status(400).json({ message: validationError });
   try { res.status(201).json(await createEmployee(req.body)); }
-  catch (error) { console.error(error); res.status(error.code === "ER_DUP_ENTRY" ? 409 : 500).json({ message: error.code === "ER_DUP_ENTRY" ? "An employee with this contact already exists" : "Error creating employee", error: error.message }); }
+  catch (error) { console.error(error); res.status(error.code === "ER_DUP_ENTRY" ? 409 : 500).json({ message: error.code === "ER_DUP_ENTRY" ? "Username or email already exists" : "Error creating employee", error: error.message }); }
 }
 
 export async function updateEmployeeHandler(req, res) {
@@ -101,6 +105,7 @@ export async function getLeave(req, res) {
 export async function requestLeave(req, res) {
   const id = parseEmployeeId(req.params.id);
   if (!id) return res.status(400).json({ message: "Invalid employee ID" });
+  if (req.user?.employeeId && Number(req.user.employeeId) !== id) return res.status(403).json({ message: "You can only submit leave for your own employee account" });
   const { date, reason } = req.body || {};
   if (!date || !reason?.trim()) return res.status(400).json({ message: "date and reason are required" });
   try {
