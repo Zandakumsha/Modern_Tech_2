@@ -1,121 +1,119 @@
-// =========================
-// Login Functionality
-// =========================
+// Modern Tech - Backend Authentication
+(() => {
+  "use strict";
 
-const login_container = document.querySelector(".login_container");
-const login_signUpBtn = document.getElementById("login_sign-up-btn");
-const login_signInBtn = document.getElementById("login_sign-in-btn");
-const login_loginForm = document.querySelector(".login_sign-in-form");
-const login_signupForm = document.querySelector(".login_sign-up-form");
+  const loginContainer = document.querySelector(".login_container");
+  const signUpBtn = document.getElementById("login_sign-up-btn");
+  const signInBtn = document.getElementById("login_sign-in-btn");
+  const loginForm = document.querySelector(".login_sign-in-form");
+  const signupForm = document.querySelector(".login_sign-up-form");
 
-if (
-  login_container &&
-  login_signUpBtn &&
-  login_signInBtn &&
-  login_loginForm &&
-  login_signupForm
-) {
-  const LOGIN_DEFAULT_AVATAR =
-    "https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg";
+  if (!loginContainer || !signUpBtn || !signInBtn || !loginForm || !signupForm) return;
 
-  // Redirect already-authenticated users straight to the dashboard
-  if (
-    sessionStorage.getItem("authenticated") &&
-    window.location.pathname.includes("login.html")
-  ) {
+  const DEFAULT_AVATAR = "https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg";
+
+  if (sessionStorage.getItem("authenticated") && window.location.pathname.includes("login.html")) {
+    const user = getStoredUser();
+    window.location.href = user?.employeeId ? "employee.html" : "index.html";
+    return;
+  }
+
+  signUpBtn.addEventListener("click", () => loginContainer.classList.add("login_sign-up-mode"));
+  signInBtn.addEventListener("click", () => loginContainer.classList.remove("login_sign-up-mode"));
+
+  async function requestAuth(endpoint, payload) {
+    const response = await fetch(`/api/auth/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json") ? await response.json() : {};
+
+    if (!response.ok) throw new Error(data.message || `Authentication failed (${response.status})`);
+    return data;
+  }
+
+  function saveAuthenticatedUser(data) {
+    const user = {
+      ...(data.user || {}),
+      avatar: data.user?.avatarUrl || data.user?.avatar || DEFAULT_AVATAR,
+    };
+
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+    if (user.employeeId) localStorage.setItem("employeeId", String(user.employeeId));
+    localStorage.setItem("authToken", data.token);
+
+    sessionStorage.setItem("authenticated", "true");
+    sessionStorage.setItem("username", user.username || user.email || "User");
+  }
+
+  function getStoredUser() {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser")) || JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  }
+
+  function redirectAfterLogin(user) {
+    // A database-linked employee goes to the employee portal.
+    if (user?.employeeId) {
+      window.location.href = "employee.html";
+      return;
+    }
+
+    // Admin/manager/staff accounts without an employee profile use the dashboard.
     window.location.href = "index.html";
   }
 
-  // Toggle Sign In / Sign Up panels
-  login_signUpBtn.addEventListener("click", () => {
-    login_container.classList.add("login_sign-up-mode");
-  });
-
-  login_signInBtn.addEventListener("click", () => {
-    login_container.classList.remove("login_sign-up-mode");
-  });
-
-  // ======================
-  // SIGN UP
-  // ======================
-  login_signupForm.addEventListener("submit", (event) => {
+  signupForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const username = document
-      .getElementById("login_signup-username")
-      .value.trim();
-
-    const email = document.getElementById("login_signup-email").value.trim();
-
-    const password = document
-      .getElementById("login_signup-password")
-      .value.trim();
+    const username = document.getElementById("login_signup-username")?.value.trim();
+    const email = document.getElementById("login_signup-email")?.value.trim().toLowerCase();
+    const password = document.getElementById("login_signup-password")?.value;
 
     if (!username || !email || !password) {
       alert("Please complete all fields.");
       return;
     }
 
-    const user = {
-      username,
-      email,
-      password,
-      role: "Admin",
-      avatar: LOGIN_DEFAULT_AVATAR,
-    };
+    try {
+      const data = await requestAuth("register", { username, email, password });
+      saveAuthenticatedUser(data);
 
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("currentUser", JSON.stringify(user));
+      alert(data.user?.employeeId
+        ? "Account created and linked to your employee profile."
+        : "Account created successfully.");
 
-    sessionStorage.setItem("authenticated", "true");
-    sessionStorage.setItem("username", username);
-
-    alert("Account created successfully!");
-
-    window.location.href = "index.html";
+      redirectAfterLogin(data.user);
+    } catch (error) {
+      console.error("Signup error:", error);
+      alert(error.message || "Something went wrong while creating your account.");
+    }
   });
 
-  // ======================
-  // LOGIN
-  // ======================
-  login_loginForm.addEventListener("submit", (event) => {
+  loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const username = document
-      .getElementById("login_login-username")
-      .value.trim();
-
-    const password = document
-      .getElementById("login_login-password")
-      .value.trim();
+    const username = document.getElementById("login_login-username")?.value.trim();
+    const password = document.getElementById("login_login-password")?.value;
 
     if (!username || !password) {
-      alert("Please enter both username and password.");
+      alert("Please enter both username/email and password.");
       return;
     }
 
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-
-    if (!storedUser) {
-      alert("No account found. Please sign up first.");
-      return;
-    }
-
-    if (username === storedUser.username && password === storedUser.password) {
-      const currentUser = {
-        ...storedUser,
-        avatar: storedUser.avatar || LOGIN_DEFAULT_AVATAR,
-      };
-
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
-      localStorage.setItem("user", JSON.stringify(currentUser));
-
-      sessionStorage.setItem("authenticated", "true");
-      sessionStorage.setItem("username", storedUser.username);
-
-      window.location.href = "index.html";
-    } else {
-      alert("Invalid username or password.");
+    try {
+      const data = await requestAuth("login", { username, password });
+      saveAuthenticatedUser(data);
+      redirectAfterLogin(data.user);
+    } catch (error) {
+      console.error("Login error:", error);
+      alert(error.message || "Invalid username/email or password.");
     }
   });
-}
+})();
