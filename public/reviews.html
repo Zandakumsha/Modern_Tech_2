@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Performance Reviews — HR Records</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!--=============== HEADER ===============-->
+    <header class="header" id="header">
+      <div class="header__container">
+        <a href="#" class="header__logo">
+          <i class="ri-cloud-fill"></i>
+          <span>Modern Tech</span>
+        </a>
+
+        <div class="header__toggle" id="header-toggle">
+          <i class="ri-menu-line"></i>
+        </div>
+      </div>
+    </header>
+
+    <!--=============== SIDEBAR ===============-->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar__container">
+        <div class="sidebar__user">
+          <div class="sidebar__img">
+            <img
+              id="navbarProfileImage"
+              src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg"
+              alt="Profile Avatar"
+            />
+          </div>
+
+          <div class="sidebar__info">
+            <h3 id="sidebar-user-name">User</h3>
+            <span id="sidebar-user-email">user@email.com</span>
+            <span class="user-profile" id="sidebar_role">Admin</span>
+          </div>
+        </div>
+
+        <div class="sidebar__content">
+          <div>
+            <h3 class="sidebar__title">MANAGE</h3>
+
+            <div class="sidebar__list">
+              <a href="index.html" class="sidebar__link">
+                <i class="ri-pie-chart-2-fill"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a href="data.html" class="sidebar__link">
+                <i class="ri-team-fill"></i>
+                <span>Employees Data</span>
+              </a>
+
+              <a href="payroll.html" class="sidebar__link">
+                <i class="ri-secure-payment-fill"></i>
+                <span>Payroll</span>
+              </a>
+
+              <a href="attendance.html" class="sidebar__link">
+                <i class="ri-calendar-event-fill"></i>
+                <span>Attendance</span>
+              </a>
+
+              <a href="calendar.html" class="sidebar__link">
+                <i class="ri-calendar-fill"></i>
+                <span>Calendar</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="sidebar__title">SETTINGS</h3>
+
+            <div class="sidebar__list">
+              <a href="settings.html" class="sidebar__link">
+                <i class="ri-settings-3-fill"></i>
+                <span>Settings</span>
+              </a>
+
+              <a href="reviews.html" class="sidebar__link active-link">
+                <i class="ri-mail-unread-fill"></i>
+                <span>Reviews</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar__actions">
+          <div class="sidebar__theme-selector">
+            <i
+              class="ri-moon-clear-fill sidebar__link sidebar__theme"
+              id="theme-button"
+            >
+              <span>Theme</span>
+            </i>
+          </div>
+
+          <div class="sidebar__link" id="logout-btn">
+            <i class="ri-logout-box-r-fill"></i>
+            <span>Log Out</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main container s_wrap" id="main">
+      <div class="attendance_container">
+        <div class="s_section_hd" style="margin-bottom: 20px">
+          <div>
+            <h2 class="s_section_title">Performance Reviews</h2>
+            <p class="s_section_p">
+              Insert, analyse performance reviews below for the 2026 Q2–Q3
+              review cycle.
+            </p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px">
+            <div>
+              <div class="s_avg_badge">AVG Employee . SCORE</div>
+              <div>
+                <span class="s_avg_val" id="avgScore">—</span
+                ><span class="s_avg_denom">/5 </span>
+              </div>
+            </div>
+            <button class="s_add_review_btn" id="openAddBtn">
+              + New Review
+            </button>
+          </div>
+        </div>
+
+        <div class="s_reviews_layout">
+          <!-- Left: list -->
+          <div class="s_review_list_panel">
+            <div class="s_review_list_hd">
+              <p class="s_review_list_title">Reviews</p>
+              <span class="s_review_list_meta" id="reviewCount"></span>
+            </div>
+            <div class="s_review_filters" id="reviewFilterChips">
+              <button class="s_filter_chip s_active" data-filter="all">
+                All
+              </button>
+              <button class="s_filter_chip" data-filter="completed">
+                Completed
+              </button>
+              <button class="s_filter_chip" data-filter="in-progress">
+                In Progress
+              </button>
+              <button class="s_filter_chip" data-filter="pending">
+                Pending
+              </button>
+            </div>
+            <div id="reviewList"></div>
+          </div>
+
+          <!-- Right: detail -->
+          <div class="s_review_detail" id="reviewDetail">
+            <div class="s_detail_empty" id="detailEmpty">
+              <span class="s_stamp s_stamp_pending s_notilt"
+                >No review selected</span
+              >
+              <p>Click a review from the list, or add a new one.</p>
+            </div>
+            <div id="detailContent" class="s_hidden"></div>
+            <!-- Add review form (hidden until triggered) -->
+            <div class="s_add_form s_hidden" id="addReviewForm">
+              <p class="s_add_form_title">New Performance Review</p>
+              <div class="s_form_group">
+                <label class="s_field_label" for="rv_employee">Employee</label>
+                <select class="s_select" id="rv_employee">
+                  <option value="">Select employee…</option>
+                </select>
+              </div>
+              <div class="s_form_group">
+                <label class="s_field_label" for="rv_cycle">Review Cycle</label>
+                <input
+                  class="s_input"
+                  type="text"
+                  id="rv_cycle"
+                  placeholder="e.g. Q3 2026"
+                />
+              </div>
+              <div class="s_form_group">
+                <label class="s_field_label" for="rv_status">Status</label>
+                <select class="s_select" id="rv_status">
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+              <div class="s_form_group">
+                <label class="s_field_label">Score (1–5)</label>
+                <div class="s_star_input" id="starInput">
+                  <button class="s_star_btn" data-val="1">★</button>
+                  <button class="s_star_btn" data-val="2">★</button>
+                  <button class="s_star_btn" data-val="3">★</button>
+                  <button class="s_star_btn" data-val="4">★</button>
+                  <button class="s_star_btn" data-val="5">★</button>
+                </div>
+              </div>
+              <div class="s_form_group">
+                <label class="s_field_label" for="rv_manager">Manager</label>
+                <input
+                  class="s_input"
+                  type="text"
+                  id="rv_manager"
+                  placeholder="e.g. D. Williams"
+                />
+              </div>
+              <div class="s_form_group">
+                <label class="s_field_label" for="rv_comments"
+                  >Manager Comments</label
+                >
+                <textarea
+                  class="s_textarea"
+                  id="rv_comments"
+                  placeholder="Enter comments…"
+                  style="min-height: 70px"
+                ></textarea>
+              </div>
+              <div class="s_form_group s_field_row">
+                <div>
+                  <label class="s_field_label" for="rv_strengths"
+                    >Strengths</label
+                  >
+                  <input
+                    class="s_input"
+                    type="text"
+                    id="rv_strengths"
+                    placeholder="Comma-separated"
+                  />
+                </div>
+                <div>
+                  <label class="s_field_label" for="rv_growth"
+                    >Growth Areas</label
+                  >
+                  <input
+                    class="s_input"
+                    type="text"
+                    id="rv_growth"
+                    placeholder="Comma-separated"
+                  />
+                </div>
+              </div>
+              <div class="s_form_actions">
+                <button class="s_btn_primary" id="rv_submit">Add Review</button>
+                <button class="s_btn_ghost" id="rv_cancel">Cancel</button>
+              </div>
+              <div
+                id="rv_error"
+                style="
+                  margin-top: 8px;
+                  font-size: 12px;
+                  color: var(--absent);
+                  font-family: var(--font-mono);
+                  display: none;
+                "
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Shared Footer -->
+      <footer>
+        <div class="footer_container">
+          <div class="footer_content">
+            <i class="ri-cloud-fill"></i>
+            <h2>Modern Tech</h2>
+            <p>
+              Modern Technology Solutions is a leading provider of HR management
+              solutions.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h3>Links</h3>
+            <ul>
+              <li><a href="index.html">Dashboard</a></li>
+              <li><a href="data">Employees</a></li>
+              <li><a href="payroll.html">Payroll</a></li>
+              <li><a href="attendance.html">Attendance</a></li>
+              <li><a href="calendar.html">Calendar</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Contact Us</h3>
+            <ul>
+              <li><i class="ri-mail-fill"></i> info@modern-tech.com</li>
+              <li><i class="ri-phone-fill"></i> +1 234 567 890</li>
+              <li>
+                <i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne
+                7780
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Follow Us</h3>
+            <ul>
+              <li>
+                <i class="ri-github-fill"></i>
+                <a href="#">Github</a>
+              </li>
+              <li>
+                <i class="ri-linkedin-fill"></i>
+                <a href="#">LinkedIn</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <hr />
+
+        <p class="footer_copy">&copy; 2024 Modern Tech. All rights reserved.</p>
+      </footer>
+    </main>
+
+    <div class="s_toast" id="toast"></div>
+
+    <script src="core.js"></script>
+    <script src="attendance-common.js"></script>
+    <script src="reviews.js"></script>
+  </body>
+</html>

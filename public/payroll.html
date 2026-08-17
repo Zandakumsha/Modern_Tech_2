@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payroll</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!--=============== HEADER ===============-->
+    <header class="header" id="header">
+      <div class="header__container">
+        <a href="#" class="header__logo">
+          <i class="ri-cloud-fill"></i>
+          <span>Modern Tech</span>
+        </a>
+
+        <div class="header__toggle" id="header-toggle">
+          <i class="ri-menu-line"></i>
+        </div>
+      </div>
+    </header>
+
+    <!--=============== SIDEBAR ===============-->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar__container">
+        <div class="sidebar__user">
+          <div class="sidebar__img">
+            <img
+              id="navbarProfileImage"
+              src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg"
+              alt="Profile Avatar"
+            />
+          </div>
+
+          <div class="sidebar__info">
+            <h3 id="sidebar-user-name">User</h3>
+            <span id="sidebar-user-email">user@email.com</span>
+            <span class="user-profile" id="sidebar_role">Admin</span>
+          </div>
+        </div>
+
+        <div class="sidebar__content">
+          <div>
+            <h3 class="sidebar__title">MANAGE</h3>
+
+            <div class="sidebar__list">
+              <a href="index.html" class="sidebar__link">
+                <i class="ri-pie-chart-2-fill"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a href="data.html" class="sidebar__link">
+                <i class="ri-team-fill"></i>
+                <span>Employees Data</span>
+              </a>
+
+              <a href="payroll.html" class="sidebar__link active-link">
+                <i class="ri-secure-payment-fill"></i>
+                <span>Payroll</span>
+              </a>
+
+              <a href="attendance.html" class="sidebar__link">
+                <i class="ri-calendar-event-fill"></i>
+                <span>Attendance</span>
+              </a>
+
+              <a href="calendar.html" class="sidebar__link">
+                <i class="ri-calendar-fill"></i>
+                <span>Calendar</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="sidebar__title">SETTINGS</h3>
+
+            <div class="sidebar__list">
+              <a href="settings.html" class="sidebar__link">
+                <i class="ri-settings-3-fill"></i>
+                <span>Settings</span>
+              </a>
+
+              <a href="reviews.html" class="sidebar__link">
+                <i class="ri-mail-unread-fill"></i>
+                <span>Reviews</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar__actions">
+          <div class="sidebar__theme-selector">
+            <i
+              class="ri-moon-clear-fill sidebar__link sidebar__theme"
+              id="theme-button"
+            >
+              <span>Theme</span>
+            </i>
+          </div>
+
+          <div class="sidebar__link" id="logout-btn">
+            <i class="ri-logout-box-r-fill"></i>
+            <span>Log Out</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main content of page -->
+    <main class="main container" id="main">
+      <section class="j-employee-payroll-calc-info">
+        <!-- Side navigation bar -->
+        <aside class="j-navbar-info">
+          <!-- Place navbar code here -->
+        </aside>
+
+        <h2>Payroll Employee Information</h2>
+        <p>Information of each of our employees at ModernTech Solutions.</p>
+
+        <section class="j-dashboard-bar">
+          <div class="dashboard-summary">
+            <div class="dashboard-card">
+              <span class="dashboard-label">EMPLOYEES</span>
+              <strong id="dashboard-employees-count">10</strong>
+              <small id="dashboard-employees-total">/ 10 total</small>
+            </div>
+
+            <div class="dashboard-card">
+              <span class="dashboard-label">CUSTOM PAYSLIPS</span>
+              <strong id="dashboard-custom-count">0</strong>
+            </div>
+
+            <div class="dashboard-card dashboard-filter">
+              <label for="employee-filter">FILTER CARDS</label>
+              <input
+                type="search"
+                id="employee-filter"
+                placeholder="Search by name, position, or department"
+              />
+            </div>
+          </div>
+
+          <div class="dashboard-links">
+            <a class="dashboard-link" href="#j-payroll-calculator"
+              >Custom Payroll Calculator</a
+            >
+          </div>
+        </section>
+
+        <!-- Employee cards -->
+        <section class="j-employee-info1">
+          <p><strong>Employee Name:</strong> Sibongile Nkosi</p>
+          <p><strong>Employee ID:</strong> 1</p>
+          <p><strong>Employee Position:</strong> Software Engineer</p>
+          <p><strong>Employee Department:</strong> Development</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info2">
+          <p><strong>Employee Name:</strong> Lungile Moyo</p>
+          <p><strong>Employee ID:</strong> 2</p>
+          <p><strong>Employee Position:</strong> HR Manager</p>
+          <p><strong>Employee Department:</strong> HR</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info3">
+          <p><strong>Employee Name:</strong> Thabo Molefe</p>
+          <p><strong>Employee ID:</strong> 3</p>
+          <p><strong>Employee Position:</strong> Quality Analyst</p>
+          <p><strong>Employee Department:</strong> QA</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info4">
+          <p><strong>Employee Name:</strong> Keshav Naidoo</p>
+          <p><strong>Employee ID:</strong> 4</p>
+          <p><strong>Employee Position:</strong> Sales Representative</p>
+          <p><strong>Employee Department:</strong> Sales</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info5">
+          <p><strong>Employee Name:</strong> Zanele Khumalo</p>
+          <p><strong>Employee ID:</strong> 5</p>
+          <p><strong>Employee Position:</strong> Marketing Specialist</p>
+          <p><strong>Employee Department:</strong> Marketing</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info6">
+          <p><strong>Employee Name:</strong> Sipho Zulu</p>
+          <p><strong>Employee ID:</strong> 6</p>
+          <p><strong>Employee Position:</strong> UI/UX Designer</p>
+          <p><strong>Employee Department:</strong> Design</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info7">
+          <p><strong>Employee Name:</strong> Naledi Moeketsi</p>
+          <p><strong>Employee ID:</strong> 7</p>
+          <p><strong>Employee Position:</strong> DevOps Engineer</p>
+          <p><strong>Employee Department:</strong> IT</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info8">
+          <p><strong>Employee Name:</strong> Farai Gumbo</p>
+          <p><strong>Employee ID:</strong> 8</p>
+          <p><strong>Employee Position:</strong> Content Strategist</p>
+          <p><strong>Employee Department:</strong> Marketing</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info9">
+          <p><strong>Employee Name:</strong> Karabo Dlamini</p>
+          <p><strong>Employee ID:</strong> 9</p>
+          <p><strong>Employee Position:</strong> Accountant</p>
+          <p><strong>Employee Department:</strong> Finance</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-employee-info10">
+          <p><strong>Employee Name:</strong> Fatima Patel</p>
+          <p><strong>Employee ID:</strong> 10</p>
+          <p><strong>Employee Position:</strong> Customer Support Lead</p>
+          <p><strong>Employee Department:</strong> Support</p>
+          <div class="card-actions">
+            <button class="payslip-btn">Digital Payslip</button>
+            <button class="calc-btn">See How It's Calculated</button>
+          </div>
+        </section>
+
+        <section class="j-payroll-calculator" id="j-payroll-calculator">
+          <h2>Custom Payroll Calculator</h2>
+          <form class="j-payroll-calc-form">
+            <label for="empName">Employee Name:</label>
+            <input
+              type="text"
+              id="empName"
+              name="empName"
+              placeholder="Enter name"
+            />
+
+            <label for="empId">Employee ID:</label>
+            <input
+              type="number"
+              id="empId"
+              name="empId"
+              min="11"
+              required
+              title="Employee IDs 1-10 are reserved for existing employees"
+              value="11"
+            />
+
+            <label for="empPosition">Employee Position:</label>
+            <input
+              type="text"
+              id="empPosition"
+              name="empPosition"
+              autocomplete="off"
+              placeholder="Enter position"
+            />
+
+            <label for="empDept">Employee Department:</label>
+            <input
+              type="text"
+              id="empDept"
+              name="empDept"
+              autocomplete="off"
+              placeholder="Enter department"
+            />
+
+            <label for="payPdStrt">Pay Period (Start):</label>
+            <input type="date" id="payPdStrt" name="payPdStrt" required />
+
+            <label for="payPdEnd">Pay Period (End):</label>
+            <input type="date" id="payPdEnd" name="payPdEnd" required />
+
+            <label for="hrsWorked">Hours Worked:</label>
+            <input
+              type="number"
+              id="hrsWorked"
+              name="hrsWorked"
+              min="0"
+              required
+              value="0"
+            />
+
+            <label for="leaveDeduct">Leave Deductions:</label>
+            <input
+              type="number"
+              id="leaveDeduct"
+              name="leaveDeduct"
+              min="0"
+              value="0"
+            />
+
+            <label for="finSal">Final Salary:</label>
+            <input
+              type="number"
+              id="finSal"
+              name="finSal"
+              min="0"
+              step="0.01"
+              required
+              value="0"
+            />
+
+            <div class="actions">
+              <button type="submit">Generate Custom Payslip</button>
+            </div>
+          </form>
+        </section>
+      </section>
+      <footer>
+        <div class="footer_container">
+          <div class="footer_content">
+            <i class="ri-cloud-fill"></i>
+            <h2>Modern Tech</h2>
+            <p>
+              Modern Technology Solutions is a leading provider of HR management
+              solutions.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h3>Links</h3>
+            <ul>
+              <li><a href="index.html">Dashboard</a></li>
+              <li><a href="data.html">Employees</a></li>
+              <li><a href="payroll.html">Payroll</a></li>
+              <li><a href="attendance.html">Attendance</a></li>
+              <li><a href="calendar.html">Calendar</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Contact Us</h3>
+            <ul>
+              <li><i class="ri-mail-fill"></i> info@modern-tech.com</li>
+              <li><i class="ri-phone-fill"></i> +1 234 567 890</li>
+              <li>
+                <i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne
+                7780
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Follow Us</h3>
+            <ul>
+              <li>
+                <i class="ri-github-fill"></i>
+                <a href="#">Github</a>
+              </li>
+              <li>
+                <i class="ri-linkedin-fill"></i>
+                <a href="#">LinkedIn</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <hr />
+
+        <p class="footer_copy">&copy; 2024 Modern Tech. All rights reserved.</p>
+      </footer>
+    </main>
+
+    <div id="modal-root"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="core.js"></script>
+    <script src="payroll.js"></script>
+  </body>
+</html>
