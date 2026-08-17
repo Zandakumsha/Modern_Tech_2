@@ -2,6 +2,7 @@ import express from "express";
 import {
   listEmployees,
   getEmployee,
+  getEmployeeForCurrentUser,
   createEmployeeHandler,
   updateEmployeeHandler,
   deleteEmployeeHandler,
@@ -14,13 +15,12 @@ import {
 
 const router = express.Router();
 
+router.get("/me", getEmployeeForCurrentUser);
 router.get("/", listEmployees);
 router.post("/", createEmployeeHandler);
-
 router.get("/:id", getEmployee);
 router.put("/:id", updateEmployeeHandler);
 router.delete("/:id", deleteEmployeeHandler);
-
 router.get("/:id/summary", getSummary);
 router.get("/:id/payroll", getPayroll);
 router.get("/:id/attendance", getAttendance);
