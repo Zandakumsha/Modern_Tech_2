@@ -1,70 +1,106 @@
-// Settings page functionality (company details + profile sync extras)
+const SETTINGS_API = "/api/settings";
 
-// Save Company Details
-const saveCompanyBtn = document.getElementById("saveCompanyBtn");
+function getSettingsUser() {
+  try {
+    return JSON.parse(localStorage.getItem("currentUser") || localStorage.getItem("user") || "null");
+  } catch { return null; }
+}
 
-if (saveCompanyBtn) {
-  saveCompanyBtn.addEventListener("click", () => {
-    const companyData = {
-      companyName: document.getElementById("company_name").value,
-      industry: document.getElementById("company_industry").value,
-      email: document.getElementById("company_email").value,
-      phone: document.getElementById("company_phone").value,
-    };
+async function settingsRequest(path = "", options = {}) {
+  const user = getSettingsUser() || {};
+  const url = new URL(`${SETTINGS_API}${path}`, window.location.origin);
+  if (user.user_id || user.userId) url.searchParams.set("userId", user.user_id || user.userId);
+  else if (user.username) url.searchParams.set("username", user.username);
+  const response = await fetch(url, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+  });
+  const body = response.status === 204 ? null : await response.json();
+  if (!response.ok) throw new Error(body?.error || "Settings request failed");
+  return body;
+}
 
-    localStorage.setItem("companyInfo", JSON.stringify(companyData));
+function setField(id, value) {
+  const element = document.getElementById(id);
+  if (element && value !== undefined && value !== null) element.value = value;
+}
 
-    alert("Company details saved successfully!");
+async function loadSettings() {
+  const data = await settingsRequest();
+  const user = data.user || getSettingsUser() || {};
+  const company = data.company || {};
+  const preferences = data.preferences || {};
+
+  setField("settings_username", user.username || "");
+  setField("settings-email", user.email || "");
+  setField("settings_role", user.role || "");
+  setField("company_name", company.companyName || "");
+  setField("company_industry", company.industry || "");
+  setField("company_email", company.email || "");
+  setField("company_phone", company.phone || "");
+
+  const values = {
+    darkModeToggle: preferences.darkMode,
+    emailNotifications: preferences.emailNotifications,
+    pushNotifications: preferences.pushNotifications,
+    attendanceAlerts: preferences.attendanceAlerts,
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (element && value !== undefined) element.checked = !!value;
+  });
+
+  const theme = document.getElementById("theme");
+  if (theme && preferences.colorTheme) theme.value = preferences.colorTheme;
+}
+
+async function saveCompany() {
+  await settingsRequest("/company", {
+    method: "PUT",
+    body: JSON.stringify({
+      companyName: document.getElementById("company_name")?.value || "",
+      industry: document.getElementById("company_industry")?.value || "",
+      email: document.getElementById("company_email")?.value || "",
+      phone: document.getElementById("company_phone")?.value || "",
+    }),
+  });
+  alert("Company details saved successfully!");
+}
+
+async function savePreferences() {
+  const user = getSettingsUser() || {};
+  await settingsRequest("/preferences", {
+    method: "PUT",
+    body: JSON.stringify({
+      userId: user.user_id || user.userId,
+      username: user.username,
+      darkMode: !!document.getElementById("darkModeToggle")?.checked,
+      colorTheme: document.getElementById("theme")?.value || "default",
+      emailNotifications: !!document.getElementById("emailNotifications")?.checked,
+      pushNotifications: !!document.getElementById("pushNotifications")?.checked,
+      attendanceAlerts: !!document.getElementById("attendanceAlerts")?.checked,
+    }),
   });
 }
 
-// Load Company Details
-document.addEventListener("DOMContentLoaded", () => {
-  const company = JSON.parse(localStorage.getItem("companyInfo")) || {};
+document.addEventListener("DOMContentLoaded", async () => {
+  try { await loadSettings(); } catch (error) { console.error(error); }
 
-  const companyName = document.getElementById("company_name");
-  const companyIndustry = document.getElementById("company_industry");
-  const companyEmail = document.getElementById("company_email");
-  const companyPhone = document.getElementById("company_phone");
+  document.getElementById("saveCompanyBtn")?.addEventListener("click", async () => {
+    try { await saveCompany(); } catch (error) { alert(error.message); }
+  });
 
-  if (companyName) companyName.value = company.companyName || "";
-  if (companyIndustry) companyIndustry.value = company.industry || "";
-  if (companyEmail) companyEmail.value = company.email || "";
-  if (companyPhone) companyPhone.value = company.phone || "";
+  ["darkModeToggle", "emailNotifications", "pushNotifications", "attendanceAlerts", "theme"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("change", () => savePreferences().catch(console.error));
+  });
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
-
-  const usernameField = document.getElementById("settings_username");
-  const emailField = document.getElementById("settings-email");
-
-  if (usernameField) {
-    usernameField.value = currentUser.username || "";
+window.selectAvatar = function selectAvatar(imagePath) {
+  const user = getSettingsUser();
+  if (user) {
+    user.avatar = imagePath;
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
   }
-
-  if (emailField) {
-    emailField.value = currentUser.email || "";
-  }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const company = JSON.parse(localStorage.getItem("companyInfo")) || {};
-
-  const settingsCompanyName = document.getElementById("settings-company-name");
-  const settingsCompanyIndustry = document.getElementById(
-    "settings-company-industry",
-  );
-  const settingsCompanyEmail = document.getElementById(
-    "settings-company-email",
-  );
-  const settingsCompanyPhone = document.getElementById(
-    "settings-company-phone",
-  );
-
-  if (settingsCompanyName) settingsCompanyName.value = company.companyName || "";
-  if (settingsCompanyIndustry)
-    settingsCompanyIndustry.value = company.industry || "";
-  if (settingsCompanyEmail) settingsCompanyEmail.value = company.email || "";
-  if (settingsCompanyPhone) settingsCompanyPhone.value = company.phone || "";
-});
+  document.querySelectorAll("#navbarProfileImage, #settingsProfileImage").forEach((img) => { img.src = imagePath; });
+};
