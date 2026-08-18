@@ -6,6 +6,7 @@ import calendarRoutes from "./routes/calendar.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import authRouter from "./routes/auth.routes.js";
+import employeeRoutes from "./routes/employees.routes.js";
 
 dotenv.config();
 
@@ -18,11 +19,11 @@ const publicDirectory = path.join(__dirname, "../public");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Authentication added without removing feature/autha's existing APIs.
 app.use("/api/auth", authRouter);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/employees", employeeRoutes);
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 
