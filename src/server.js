@@ -7,10 +7,14 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 dotenv.config();
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+// Modern Tech uses port 5000 for the complete application.
+// Set PORT=5000 in .env to override this if needed.
+const PORT = Number(process.env.PORT) || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve every frontend page from the same Express server and port.
 app.use(express.static("public"));
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
@@ -23,4 +27,6 @@ app.use((error, _req, res, _next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
-app.listen(PORT, () => console.log(`Modern Tech server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Modern Tech server running on port ${PORT}`);
+});
