@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Leave | Modern Tech</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f4f4f4;color:#111;font-family:Arial,Helvetica,sans-serif}.leave-page{min-height:100vh;padding:18px}.leave-card{max-width:1120px;margin:0 auto;background:#fff;border:1px solid #d7d7d7;box-shadow:0 2px 12px rgba(0,0,0,.08)}.leave-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #ddd}.leave-head h1{font-size:24px;margin:0}.leave-close{border:0;background:transparent;font-size:30px;cursor:pointer;line-height:1}.leave-body{padding:24px}.section{margin-bottom:24px;border:1px solid #cfcfcf}.section-title{background:#050505;color:#fff;font-size:20px;font-weight:700;padding:8px 12px;text-transform:uppercase}.grid{display:grid;grid-template-columns:185px 1fr 185px 1fr}.cell{min-height:46px;padding:10px 12px;border-right:1px solid #d2d2d2;border-bottom:1px solid #d2d2d2;display:flex;align-items:center}.cell:nth-child(4n){border-right:0}.label{font-weight:700;background:#fafafa}.cell input,.cell select,.cell textarea{width:100%;border:0;outline:0;background:transparent;font:inherit}.cell input[readonly]{font-style:italic}.date-wrap{display:flex;align-items:center;width:100%;gap:6px}.date-wrap input{font-style:italic}.date-wrap i{font-size:20px}.full{grid-column:1/-1}.notes-cell{min-height:54px}.reason-grid{display:grid;grid-template-columns:1fr 1fr 1fr}.reason-row{display:grid;grid-template-columns:1fr 45px 1fr;min-height:54px;border-right:1px solid #d2d2d2;border-bottom:1px solid #d2d2d2}.reason-row:last-child{border-bottom:0}.reason-row:last-child,.reason-row:nth-child(3n){border-right:0}.reason-label{font-weight:700;padding:10px 12px}.check{display:grid;place-items:center}.check input{width:20px;height:20px}.reason-input{border:1px solid #ccc;margin:8px;padding:7px 9px;border-radius:4px;width:calc(100% - 16px)}.cert-text{padding:14px 30px;text-align:center;font-size:17px;font-style:italic;line-height:1.6;border-bottom:1px solid #d2d2d2}.cert-grid{display:grid;grid-template-columns:210px 1fr 80px 245px}.cert-grid>div{padding:10px 12px;border-right:1px solid #d2d2d2}.cert-grid>div:last-child{border-right:0}.signature-name{font-style:italic}.decision{display:grid;grid-template-columns:1fr 1fr}.decision>label{padding:12px;border-right:1px solid #d2d2d2}.decision>label:last-child{border-right:0}.decision input{float:right;width:20px;height:20px}.management-grid{display:grid;grid-template-columns:170px 1fr 80px 245px}.management-grid>div{padding:10px 12px;border-right:1px solid #d2d2d2;border-bottom:1px solid #d2d2d2}.management-grid>div:nth-child(4n){border-right:0}.management-grid input{width:100%;border:0;outline:0;font:inherit}.management-grid input::placeholder{font-style:italic;color:#777}.leave-actions{display:flex;justify-content:flex-end;gap:12px;padding:18px 24px;border-top:1px solid #ddd}.btn{border:1px solid #c8c8c8;background:#fff;padding:11px 20px;border-radius:5px;font-weight:700;font-size:16px;cursor:pointer}.btn.primary{background:#1769e0;color:#fff;border-color:#1769e0}.btn:disabled{opacity:.55;cursor:not-allowed}.status{margin:0 24px 16px;padding:12px 14px;border-radius:6px;display:none}.status.show{display:block}.status.error{background:#fee2e2;color:#991b1b}.status.success{background:#dcfce7;color:#166534}.result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.result-overlay.show{display:flex}.result-box{background:#fff;border-radius:14px;padding:30px;max-width:460px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}.result-box i{font-size:48px;color:#16805d}.result-box h2{margin:12px 0 8px}.result-box p{color:#555;line-height:1.5}.result-actions{display:flex;justify-content:center;gap:12px;margin-top:22px}@media(max-width:800px){.leave-page{padding:0}.grid,.cert-grid,.management-grid{grid-template-columns:1fr 1fr}.grid .full{grid-column:1/-1}.reason-grid{grid-template-columns:1fr}.reason-row{border-right:0}.leave-body{padding:12px}.section-title{font-size:17px}.cell{font-size:14px}.cert-grid>div,.management-grid>div{border-right:1px solid #ddd}.leave-actions{padding:14px;flex-wrap:wrap}.leave-actions .btn{flex:1}.leave-card{border:0}}
+    @media print{body{background:#fff}.leave-page{padding:0}.leave-card{box-shadow:none;border:0;max-width:none}.leave-head{padding:10px 0}.leave-close,.leave-actions,.status,.result-overlay{display:none!important}.leave-body{padding:0}.section{break-inside:avoid;margin-bottom:14px}.section-title{font-size:16px}.cell{min-height:38px;padding:7px 9px;font-size:12px}.cert-text{font-size:13px;padding:10px}.leave-page{font-size:12px}}
+  </style>
+</head>
+<body>
+<div class="leave-page">
+  <div class="leave-card">
+    <header class="leave-head"><h1>Request Leave</h1><button class="leave-close" id="exit-top" type="button" aria-label="Exit">&times;</button></header>
+    <div id="status" class="status"></div>
+    <form id="leave-form">
+      <div class="leave-body">
+        <section class="section">
+          <div class="section-title">Employee Details</div>
+          <div class="grid">
+            <div class="cell label">Name:</div><div class="cell"><input id="employee-name" name="employeeName" readonly></div>
+            <div class="cell label">Date:</div><div class="cell"><input id="request-date" name="requestDate" readonly></div>
+            <div class="cell label">Department:</div><div class="cell"><input id="department" name="department" readonly></div>
+            <div class="cell label">Supervisor:</div><div class="cell"><input id="supervisor" name="supervisor" value="HR Manager, Modern Tech" readonly></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Time Requesting Off</div>
+          <div class="grid">
+            <div class="cell label">Beginning On:</div><div class="cell"><div class="date-wrap"><input id="start-date" name="startDate" type="date" required><i class="ri-calendar-line"></i></div></div>
+            <div class="cell label">Ending On:</div><div class="cell"><div class="date-wrap"><input id="end-date" name="endDate" type="date" required><i class="ri-calendar-line"></i></div></div>
+            <div class="cell label">Days:</div><div class="cell"><input id="days" name="days" type="number" min="1" readonly></div>
+            <div class="cell label">Hours:</div><div class="cell"><input id="hours" name="hours" type="number" min="0" placeholder="e.g. 32"></div>
+            <div class="cell label">Return to Work:</div><div class="cell"><div class="date-wrap"><input id="return-date" name="returnDate" type="date"><i class="ri-calendar-line"></i></div></div>
+            <div class="cell label">Other:</div><div class="cell"><input name="other" placeholder="e.g. Half day, Flexible hours"></div>
+            <div class="cell label">Notes:</div><div class="cell full notes-cell"><input name="notes" placeholder="Enter any additional notes..."></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Reason for Request</div>
+          <div class="reason-grid">
+            <div class="reason-row"><div class="reason-label">Personal</div><div class="check"><input type="checkbox" name="personal" value="Personal"></div><input class="reason-input" name="personalReason" placeholder="Enter reason..."></div>
+            <div class="reason-row"><div class="reason-label">Vacation</div><div class="check"><input type="checkbox" name="vacation" value="Vacation"></div><input class="reason-input" name="vacationReason" placeholder="Enter reason..."></div>
+            <div class="reason-row"><div class="reason-label">Jury Assignment</div><div class="check"><input type="checkbox" name="juryAssignment" value="Jury Assignment"></div><input class="reason-input" name="juryReason" placeholder="Enter reason..."></div>
+          </div>
+          <div class="grid"><div class="cell label">Notes:</div><div class="cell full notes-cell"><input name="reasonNotes" placeholder="Enter any additional notes..."></div></div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Employee Certification</div>
+          <div class="cert-text">I certify that the above is accurate. I recognize that this request is subject to the approval of management and company policies.</div>
+          <div class="cert-grid"><div class="label">Employee Signature:</div><div id="employee-signature" class="signature-name"></div><div class="label">Date:</div><div id="signature-date"></div></div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Employer Decision</div>
+          <div class="decision"><label>Approved <input type="checkbox" disabled></label><label>Not Approved <input type="checkbox" disabled></label></div>
+        </section>
+
+        <section class="section">
+          <div class="section-title">Supervisor / Management Signature</div>
+          <div class="management-grid"><div class="label">Signature:</div><div></div><div class="label">Date:</div><div><input type="date" name="managerDate"></div><div class="label">Name Printed:</div><div><input name="managerName" placeholder="Enter name"></div><div></div><div></div></div>
+        </section>
+      </div>
+      <div class="leave-actions"><button class="btn" type="button" id="exit-btn">Exit</button><button class="btn primary" type="submit" id="submit-btn">Submit Request</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="result-overlay" id="result-overlay"><div class="result-box"><i class="ri-checkbox-circle-fill"></i><h2>Leave Request Submitted</h2><p>Your leave request has been sent to HR. You can now download the completed form or exit.</p><div class="result-actions"><button class="btn" id="result-exit" type="button">Exit</button><button class="btn primary" id="download-pdf" type="button"><i class="ri-download-2-line"></i> Download PDF</button></div></div></div>
+<script src="js/leave-request.js"></script>
+</body>
+</html>
