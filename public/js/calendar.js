@@ -19,6 +19,8 @@ function calendarUser() {
   return null;
 }
 
+// Read the response as text first. Some server/proxy errors return an empty
+// response or non-JSON content, which must not be passed directly to response.json().
 async function calendarRequest(path = "", options = {}) {
   const user = calendarUser() || {};
   const url = new URL(`${CALENDAR_API}${path}`, window.location.origin);
@@ -30,8 +32,22 @@ async function calendarRequest(path = "", options = {}) {
     ...options,
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
   });
-  const body = response.status === 204 ? null : await response.json();
-  if (!response.ok) throw new Error(body?.error || "Calendar request failed");
+
+  const text = await response.text();
+  let body = null;
+
+  if (text.trim()) {
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = { error: text.replace(/<[^>]*>/g, " ").trim() || "Server returned an invalid response." };
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(body?.error || `Calendar request failed (${response.status})`);
+  }
+
   return body;
 }
 
@@ -81,12 +97,45 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
 
     const rows = await calendarRequest();
     events = {};
-    rows.forEach((event) => {
+    (Array.isArray(rows) ? rows : []).forEach((event) => {
       if (!events[event.eventDate]) events[event.eventDate] = [];
       events[event.eventDate].push(event);
     });
     renderCalendar();
     if (selectedDateKey) showEvents(selectedDateKey);
+  }
+
+  function renderDayEvents(dayDiv, dateKey) {
+    const dayEvents = events[dateKey] || [];
+    if (!dayEvents.length) return;
+
+    const eventContainer = document.createElement("div");
+    eventContainer.className = "calendar-day-events";
+
+    const colors = { Work: "#9b4dff", Personal: "#2ecc71", Urgent: "#ff4d6d" };
+
+    dayEvents.forEach((event) => {
+      const item = document.createElement("div");
+      item.className = "calendar-day-event";
+      item.style.borderLeft = `3px solid ${colors[event.category] || "#4ea7ff"}`;
+      item.title = `${event.title}${event.time ? ` - ${event.time}` : ""}`;
+
+      const title = document.createElement("span");
+      title.className = "calendar-day-event-title";
+      title.textContent = event.title;
+      item.appendChild(title);
+
+      if (event.time) {
+        const time = document.createElement("span");
+        time.className = "calendar-day-event-time";
+        time.textContent = event.time;
+        item.appendChild(time);
+      }
+
+      eventContainer.appendChild(item);
+    });
+
+    dayDiv.appendChild(eventContainer);
   }
 
   function renderCalendar() {
@@ -120,7 +169,11 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
       dayDiv.className = "day";
       if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) dayDiv.classList.add("today");
       if (selectedDateKey === dateKey) dayDiv.classList.add("selected");
-      dayDiv.innerHTML = `<div class="day-number">${day}</div>`;
+
+      const dayNumber = document.createElement("div");
+      dayNumber.className = "day-number";
+      dayNumber.textContent = day;
+      dayDiv.appendChild(dayNumber);
 
       if (events[dateKey]?.length) {
         const dot = document.createElement("div");
@@ -128,7 +181,9 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
         const colors = { Work: "#9b4dff", Personal: "#2ecc71", Urgent: "#ff4d6d" };
         dot.style.background = colors[events[dateKey][0].category] || "#4ea7ff";
         dayDiv.appendChild(dot);
+        renderDayEvents(dayDiv, dateKey);
       }
+
       dayDiv.addEventListener("click", () => selectDate(day));
       calendar.appendChild(dayDiv);
 
@@ -150,7 +205,6 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
     selectedDateTitle.textContent = date.toDateString();
     renderCalendar();
     showEvents(selectedDateKey);
-    showFormMessage(`Event will be added on ${date.toDateString()}.`, "success");
   }
 
   function showEvents(key) {
@@ -165,9 +219,11 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
       div.className = "event";
       const colors = { Work: "#9b4dff", Personal: "#2ecc71", Urgent: "#ff4d6d" };
       div.style.borderLeft = `5px solid ${colors[event.category] || "#4ea7ff"}`;
-      div.innerHTML = `<h4></h4><p><strong>Time:</strong> ${event.time || ""}</p><p><strong>Category:</strong> ${event.category}</p><p></p><button class="delete-event" type="button">Delete</button>`;
+      div.innerHTML = `<h4></h4><p><strong>Time:</strong> </p><p><strong>Category:</strong> </p><p></p><button class="delete-event" type="button">Delete</button>`;
       div.querySelector("h4").textContent = event.title;
-      div.querySelector("p:last-of-type").textContent = event.description || "";
+      div.querySelectorAll("p")[0].appendChild(document.createTextNode(event.time || "Not specified"));
+      div.querySelectorAll("p")[1].appendChild(document.createTextNode(event.category || "General"));
+      div.querySelectorAll("p")[2].textContent = event.description || "";
       div.querySelector(".delete-event").addEventListener("click", async () => {
         try {
           await calendarRequest(`/${event.id}`, { method: "DELETE", body: JSON.stringify(calendarUser() || {}) });
@@ -182,7 +238,6 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
 
   eventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const user = calendarUser();
     if (!user || !(user.user_id || user.userId || user.id || user.username)) {
       showFormMessage("Please sign in before adding an event.");
@@ -190,8 +245,7 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
     }
 
     if (!selectedDateKey) {
-      const today = new Date();
-      selectDate(today.getDate());
+      selectDate(new Date().getDate());
       return;
     }
 
@@ -218,7 +272,7 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
     }
 
     try {
-      await calendarRequest("", {
+      const created = await calendarRequest("", {
         method: "POST",
         body: JSON.stringify({
           userId: user.user_id || user.userId || user.id,
@@ -231,10 +285,23 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
         }),
       });
 
+      // Do not fail just because an older backend returns an empty success body.
+      if (created && created.eventDate) {
+        if (!events[created.eventDate]) events[created.eventDate] = [];
+        events[created.eventDate].push(created);
+      }
+
       eventForm.reset();
-      await loadEvents();
-      selectDate(selectedDay);
+      renderCalendar();
+      showEvents(selectedDateKey);
       showFormMessage("Event added successfully.", "success");
+
+      // Refresh from the database when available; an empty response will no longer crash.
+      try {
+        await loadEvents();
+      } catch (refreshError) {
+        console.warn("Calendar refresh failed after adding event:", refreshError);
+      }
     } catch (error) {
       console.error("Add event error:", error);
       showFormMessage(error.message || "Unable to add event.");
