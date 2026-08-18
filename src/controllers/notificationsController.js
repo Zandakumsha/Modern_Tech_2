@@ -21,7 +21,14 @@ async function ensureNotificationsTable() {
 export async function getNotifications(_req, res) {
   try {
     await ensureNotificationsTable();
-    const [rows] = await pool.query(`SELECT notification_id AS id, type, title, message, employee_id AS employeeId, employee_name AS employeeName, payload, is_read AS isRead, created_at AS createdAt FROM notifications ORDER BY created_at DESC LIMIT 100`);
+    const [rows] = await pool.query(`
+      SELECT notification_id AS id, type, title, message,
+             employee_id AS employeeId, employee_name AS employeeName,
+             payload, is_read AS isRead, created_at AS createdAt
+      FROM notifications
+      ORDER BY created_at DESC
+      LIMIT 100
+    `);
     res.json({ notifications: rows });
   } catch (error) {
     console.error("Notifications load failed:", error);
@@ -32,9 +39,26 @@ export async function getNotifications(_req, res) {
 export async function createNotification(req, res) {
   try {
     await ensureNotificationsTable();
-    const { type = "message", title, message, employeeId = null, employeeName = null, payload = null } = req.body || {};
+    const { type = "message", title, message, payload = null } = req.body || {};
     if (!title || !message) return res.status(400).json({ message: "Title and message are required" });
-    const [result] = await pool.query(`INSERT INTO notifications (type, title, message, employee_id, employee_name, payload) VALUES (?, ?, ?, ?, ?, ?)`, [type, title, message, employeeId, employeeName, payload ? JSON.stringify(payload) : null]);
+
+    const employeeId = Number(req.user?.employeeId);
+    if (!Number.isInteger(employeeId) || employeeId <= 0) {
+      return res.status(403).json({ message: "A valid employee account is required" });
+    }
+
+    const [employeeRows] = await pool.query(
+      "SELECT name FROM employees WHERE employee_id = ? LIMIT 1",
+      [employeeId],
+    );
+    const employeeName = employeeRows[0]?.name || String(employeeId);
+
+    const [result] = await pool.query(
+      `INSERT INTO notifications (type, title, message, employee_id, employee_name, payload)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [type, title, message, employeeId, employeeName, payload ? JSON.stringify(payload) : null],
+    );
+
     res.status(201).json({ id: result.insertId, message: "Notification created" });
   } catch (error) {
     console.error("Notification creation failed:", error);
