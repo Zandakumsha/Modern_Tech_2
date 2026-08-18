@@ -15,6 +15,8 @@ const customPayslipCountEl = document.getElementById("dashboard-custom-count");
 const employeeFilterInput = document.getElementById("employee-filter");
 let totalEmployees = 0;
 let customPayslipCount = 0;
+let validPositions = [];
+let validDepartments = [];
 
 function formatNumber(n) {
   if (typeof n !== "number") n = Number(n) || 0;
@@ -531,8 +533,38 @@ if (form) {
 
     // fast client-side checks before we even hit the network — the backend
     // re-validates all of this too, so these are just for a snappier UX.
+
+    // Check for all required fields
+    if (!empName || !empName.trim()) {
+      alert("Employee Name is required. Please fill out all information.");
+      return;
+    }
     if (!empId || empId < 11) {
       alert("Employee ID must be 11 or higher because 1-10 are reserved.");
+      return;
+    }
+    if (!empPosition || !empPosition.trim()) {
+      alert(
+        "Employee Position is required. Please select from the available options.",
+      );
+      return;
+    }
+    if (!empDept || !empDept.trim()) {
+      alert(
+        "Employee Department is required. Please select from the available options.",
+      );
+      return;
+    }
+    if (empPosition && !validPositions.includes(empPosition)) {
+      alert(
+        `Invalid Employee Position. Please select from the available options:\n\n${validPositions.join(", ")}`,
+      );
+      return;
+    }
+    if (empDept && !validDepartments.includes(empDept)) {
+      alert(
+        `Invalid Employee Department. Please select from the available options:\n\n${validDepartments.join(", ")}`,
+      );
       return;
     }
     if (!payPdStrt || !payPdEnd) {
@@ -565,8 +597,22 @@ if (form) {
       alert("Pay period end must be the last day of the same month.");
       return;
     }
-    if (!hrsWorked || isNaN(finSal)) {
-      alert("Please complete required numeric fields.");
+    if (!hrsWorked || hrsWorked <= 0 || isNaN(hrsWorked)) {
+      alert(
+        "Hours Worked is required and must be a positive number. Please fill out all information.",
+      );
+      return;
+    }
+    if (isNaN(leaveDeduct) || leaveDeduct < 0) {
+      alert(
+        "Leave Deductions is required and must be a valid number (0 or greater). Please fill out all information.",
+      );
+      return;
+    }
+    if (!finSal || finSal <= 0 || isNaN(finSal)) {
+      alert(
+        "Final Salary is required and must be a positive number. Please fill out all information.",
+      );
       return;
     }
 
@@ -679,7 +725,46 @@ async function normalizeEmployeeSections() {
   });
 }
 
+/**
+ * Fetch unique positions and departments from the backend
+ * and populate the datalists for the custom payroll calculator form
+ */
+async function populatePositionsDepartmentsDatalist() {
+  try {
+    const res = await fetch(`${API_BASE}/options/positions-departments`);
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      console.warn("Could not fetch positions and departments");
+      return;
+    }
+
+    // Store valid options globally for validation
+    validPositions = data.positions || [];
+    validDepartments = data.departments || [];
+
+    // Populate positions datalist
+    const positionsDatalist = document.getElementById("positionsList");
+    if (positionsDatalist && data.positions) {
+      positionsDatalist.innerHTML = data.positions
+        .map((pos) => `<option value="${escapeHtml(pos)}"></option>`)
+        .join("");
+    }
+
+    // Populate departments datalist
+    const departmentsDatalist = document.getElementById("departmentsList");
+    if (departmentsDatalist && data.departments) {
+      departmentsDatalist.innerHTML = data.departments
+        .map((dept) => `<option value="${escapeHtml(dept)}"></option>`)
+        .join("");
+    }
+  } catch (err) {
+    console.error("Error populating position/department lists:", err);
+  }
+}
+
 // initialize
 loadPayrollData()
   .then(() => normalizeEmployeeSections())
+  .then(() => populatePositionsDepartmentsDatalist())
   .then(() => initializeDashboard());

@@ -7,7 +7,7 @@
 // NOTE: adjust the require path below to match wherever your shared DB
 // connection pool actually lives (e.g. '../db', '../config/db').
 // It's expected to be a mysql2/promise pool (pool.query / pool.getConnection).
-import pool from '../config/db.js';
+import pool from "../config/db.js";
 
 /**
  * Mirrors the exact formula used client-side in payroll.js so payslip
@@ -34,7 +34,16 @@ function computePayroll(hoursWorked, leaveDeductions, finalSalary) {
   const gross = hourly * hw;
   const totalDeductions = hourly * ld;
   const net = gross - totalDeductions;
-  return { hourly, daily, weekly, monthly, annual, gross, totalDeductions, net };
+  return {
+    hourly,
+    daily,
+    weekly,
+    monthly,
+    annual,
+    gross,
+    totalDeductions,
+    net,
+  };
 }
 
 /**
@@ -44,10 +53,19 @@ function computePayroll(hoursWorked, leaveDeductions, finalSalary) {
 function isValidCalendarMonth(startStr, endStr) {
   const start = new Date(startStr);
   const end = new Date(endStr);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
-  if (start.getFullYear() !== end.getFullYear() || start.getMonth() !== end.getMonth()) return false;
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+    return false;
+  if (
+    start.getFullYear() !== end.getFullYear() ||
+    start.getMonth() !== end.getMonth()
+  )
+    return false;
   if (start.getDate() !== 1) return false;
-  const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+  const lastDay = new Date(
+    start.getFullYear(),
+    start.getMonth() + 1,
+    0,
+  ).getDate();
   if (end.getDate() !== lastDay) return false;
   return true;
 }
@@ -69,7 +87,7 @@ async function getAllPayroll(req, res, next) {
        WHERE p.payroll_id IN (
          SELECT MAX(payroll_id) FROM payroll GROUP BY employee_id
        )
-       ORDER BY e.employee_id ASC`
+       ORDER BY e.employee_id ASC`,
     );
     res.status(200).json({ success: true, payrollData: rows });
   } catch (err) {
@@ -86,7 +104,10 @@ async function getPayrollByEmployee(req, res, next) {
   try {
     const { employeeId } = req.params;
     if (!Number.isInteger(Number(employeeId)) || Number(employeeId) <= 0) {
-      return res.status(400).json({ success: false, error: 'employeeId must be a positive integer' });
+      return res.status(400).json({
+        success: false,
+        error: "employeeId must be a positive integer",
+      });
     }
 
     const [rows] = await pool.query(
@@ -99,15 +120,22 @@ async function getPayrollByEmployee(req, res, next) {
        WHERE e.employee_id = ?
        ORDER BY p.payroll_id DESC
        LIMIT 1`,
-      [employeeId]
+      [employeeId],
     );
 
     if (!rows.length) {
-      return res.status(404).json({ success: false, error: `No payroll record found for employee ${employeeId}` });
+      return res.status(404).json({
+        success: false,
+        error: `No payroll record found for employee ${employeeId}`,
+      });
     }
 
     const record = rows[0];
-    const payslip = computePayroll(record.hours_worked, record.leave_deductions, record.final_salary);
+    const payslip = computePayroll(
+      record.hours_worked,
+      record.leave_deductions,
+      record.final_salary,
+    );
 
     res.status(200).json({ success: true, employee: record, payslip });
   } catch (err) {
@@ -125,8 +153,15 @@ async function getPayrollByEmployee(req, res, next) {
  */
 async function createCustomPayslip(req, res, next) {
   const {
-    empId, empName, empPosition, empDept,
-    payPdStrt, payPdEnd, hrsWorked, leaveDeduct, finSal,
+    empId,
+    empName,
+    empPosition,
+    empDept,
+    payPdStrt,
+    payPdEnd,
+    hrsWorked,
+    leaveDeduct,
+    finSal,
   } = req.body;
 
   // --- server-side validation (mirrors the client-side checks in payroll.js) ---
@@ -137,29 +172,75 @@ async function createCustomPayslip(req, res, next) {
 
   const errors = [];
   if (!Number.isInteger(employeeId) || employeeId < 11) {
-    errors.push('empId must be an integer of 11 or higher (IDs 1-10 are reserved).');
+    errors.push(
+      "empId must be an integer of 11 or higher (IDs 1-10 are reserved).",
+    );
   }
-  if (!empName || typeof empName !== 'string' || !empName.trim()) {
-    errors.push('empName is required.');
+  if (!empName || typeof empName !== "string" || !empName.trim()) {
+    errors.push("empName is required.");
+  }
+  if (!empPosition || typeof empPosition !== "string" || !empPosition.trim()) {
+    errors.push("empPosition is required.");
+  }
+  if (!empDept || typeof empDept !== "string" || !empDept.trim()) {
+    errors.push("empDept is required.");
   }
   if (!payPdStrt || !payPdEnd || !isValidCalendarMonth(payPdStrt, payPdEnd)) {
-    errors.push('payPdStrt/payPdEnd must form one full calendar month (start = 1st, end = last day, same month/year).');
+    errors.push(
+      "payPdStrt/payPdEnd must form one full calendar month (start = 1st, end = last day, same month/year).",
+    );
   }
   if (!Number.isFinite(hoursWorked) || hoursWorked <= 0) {
-    errors.push('hrsWorked must be a positive number.');
+    errors.push("hrsWorked must be a positive number.");
   }
   if (!Number.isFinite(leaveDeductions) || leaveDeductions < 0) {
-    errors.push('leaveDeduct must be zero or a positive number.');
+    errors.push("leaveDeduct must be zero or a positive number.");
   }
   if (leaveDeductions >= hoursWorked) {
-    errors.push('leaveDeduct must be less than hrsWorked.');
+    errors.push("leaveDeduct must be less than hrsWorked.");
   }
   if (!Number.isFinite(finalSalary) || finalSalary < 0) {
-    errors.push('finSal must be zero or a positive number.');
+    errors.push("finSal must be zero or a positive number.");
   }
 
   if (errors.length) {
     return res.status(400).json({ success: false, errors });
+  }
+
+  // Validate position and department against database options
+  try {
+    const [positionRows] = await pool.query(
+      `SELECT DISTINCT position FROM employees WHERE position IS NOT NULL AND position != '' ORDER BY position`,
+    );
+    const [departmentRows] = await pool.query(
+      `SELECT DISTINCT department FROM employees WHERE department IS NOT NULL AND department != '' ORDER BY department`,
+    );
+
+    const validPositions = positionRows.map((p) => p.position);
+    const validDepartments = departmentRows.map((d) => d.department);
+
+    // Position must be in the valid list
+    if (!validPositions.includes(empPosition.trim())) {
+      return res.status(400).json({
+        success: false,
+        errors: [
+          `Invalid Employee Position. Must be one of: ${validPositions.join(", ")}`,
+        ],
+      });
+    }
+
+    // Department must be in the valid list
+    if (!validDepartments.includes(empDept.trim())) {
+      return res.status(400).json({
+        success: false,
+        errors: [
+          `Invalid Employee Department. Must be one of: ${validDepartments.join(", ")}`,
+        ],
+      });
+    }
+  } catch (err) {
+    next(err);
+    return;
   }
 
   const conn = await pool.getConnection();
@@ -167,8 +248,8 @@ async function createCustomPayslip(req, res, next) {
     await conn.beginTransaction();
 
     const [existing] = await conn.query(
-      'SELECT employee_id FROM employees WHERE employee_id = ? FOR UPDATE',
-      [employeeId]
+      "SELECT employee_id FROM employees WHERE employee_id = ? FOR UPDATE",
+      [employeeId],
     );
 
     if (!existing.length) {
@@ -180,18 +261,25 @@ async function createCustomPayslip(req, res, next) {
         [
           employeeId,
           empName.trim(),
-          (empPosition || '').trim() || null,
-          (empDept || '').trim() || null,
+          (empPosition || "").trim() || null,
+          (empDept || "").trim() || null,
           finalSalary,
           `custom-emp-${employeeId}@moderntech.internal`,
-        ]
+        ],
       );
     }
 
     const [result] = await conn.query(
       `INSERT INTO payroll (employee_id, pay_period_start, pay_period_end, hours_worked, leave_deductions, final_salary)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [employeeId, payPdStrt, payPdEnd, hoursWorked, leaveDeductions, finalSalary]
+      [
+        employeeId,
+        payPdStrt,
+        payPdEnd,
+        hoursWorked,
+        leaveDeductions,
+        finalSalary,
+      ],
     );
 
     await conn.commit();
@@ -221,10 +309,37 @@ async function createCustomPayslip(req, res, next) {
   }
 }
 
+/**
+ * Get unique positions and departments from employees table
+ * Used to populate dropdown options in the custom payroll calculator
+ */
+async function getPositionsDepartments(req, res, next) {
+  try {
+    const [positions] = await pool.query(
+      `SELECT DISTINCT position FROM employees WHERE position IS NOT NULL AND position != '' ORDER BY position`,
+    );
+    const [departments] = await pool.query(
+      `SELECT DISTINCT department FROM employees WHERE department IS NOT NULL AND department != '' ORDER BY department`,
+    );
+
+    const positionList = positions.map((p) => p.position).filter(Boolean);
+    const departmentList = departments.map((d) => d.department).filter(Boolean);
+
+    res.json({
+      success: true,
+      positions: positionList,
+      departments: departmentList,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export {
   computePayroll,
   isValidCalendarMonth,
   getAllPayroll,
   getPayrollByEmployee,
   createCustomPayslip,
+  getPositionsDepartments,
 };

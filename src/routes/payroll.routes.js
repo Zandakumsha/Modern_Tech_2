@@ -4,6 +4,7 @@ import {
   getAllPayroll,
   getPayrollByEmployee,
   createCustomPayslip,
+  getPositionsDepartments,
 } from '../controllers/payrollController.js';
 
 const router = express.Router();
@@ -15,6 +16,9 @@ const router = express.Router();
 
 // GET  /api/payroll             -> all employees + their latest payroll record
 router.get('/', getAllPayroll);
+
+// GET  /api/payroll/options/positions-departments -> unique positions and departments for dropdowns
+router.get('/options/positions-departments', getPositionsDepartments);
 
 // GET  /api/payroll/:employeeId -> one employee's latest payroll record + computed payslip
 router.get('/:employeeId', getPayrollByEmployee);
