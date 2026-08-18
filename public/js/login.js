@@ -1,171 +1,153 @@
-// =========================
-// Modern Tech Login + Workspace Selection
-// =========================
+// Modern Tech - Role-based HR and Employee authentication
+(() => {
+  "use strict";
 
-const login_container = document.querySelector(".login_container");
-const login_signUpBtn = document.getElementById("login_sign-up-btn");
-const login_signInBtn = document.getElementById("login_sign-in-btn");
-const login_loginForm = document.querySelector(".login_sign-in-form");
-const login_signupForm = document.querySelector(".login_sign-up-form");
-const workspaceModal = document.getElementById("workspaceModal");
-const workspaceWelcome = document.getElementById("workspaceWelcome");
-const hrWorkspace = document.getElementById("hrWorkspace");
-const employeeWorkspace = document.getElementById("employeeWorkspace");
-const workspaceCancel = document.getElementById("workspaceCancel");
+  const loginContainer = document.querySelector(".login_container");
+  const signUpBtn = document.getElementById("login_sign-up-btn");
+  const signInBtn = document.getElementById("login_sign-in-btn");
 
-const LOGIN_DEFAULT_AVATAR =
-  "https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg";
+  const hrForm = document.getElementById("login-auth-form");
+  const hrUsernameInput = document.getElementById("login-hr-username");
+  const hrPasswordInput = document.getElementById("login-password");
+  const hrSubmit = document.getElementById("login-submit");
+  const hrMessage = document.getElementById("login-message");
 
-function getStoredUser() {
-  try {
-    return JSON.parse(localStorage.getItem("currentUser") || localStorage.getItem("user"));
-  } catch {
-    return null;
+  const employeeForm = document.getElementById("employee-auth-form");
+  const employeeIdInput = document.getElementById("login-employee-id");
+  const employeeSubmit = document.getElementById("employee-submit");
+  const employeeMessage = document.getElementById("employee-message");
+
+  if (!loginContainer || !signUpBtn || !signInBtn || !hrForm || !employeeForm) return;
+
+  function getStoredUser() {
+    try {
+      return JSON.parse(localStorage.getItem("currentUser")) || null;
+    } catch {
+      return null;
+    }
   }
-}
 
-function openWorkspaceChooser(user) {
-  if (!workspaceModal) return;
-  const name = user?.username ? `Welcome, ${user.username}.` : "Where would you like to go?";
-  workspaceWelcome.textContent = `${name} Choose your workspace.`;
-  workspaceModal.classList.add("show");
-  workspaceModal.setAttribute("aria-hidden", "false");
-}
-
-function closeWorkspaceChooser() {
-  if (!workspaceModal) return;
-  workspaceModal.classList.remove("show");
-  workspaceModal.setAttribute("aria-hidden", "true");
-}
-
-function enterWorkspace(workspace) {
-  const user = getStoredUser() || {};
-  const role = workspace === "employee" ? "Employee" : "Admin";
-  const currentUser = { ...user, role };
-
-  localStorage.setItem("currentUser", JSON.stringify(currentUser));
-  localStorage.setItem("selectedWorkspace", workspace);
-  sessionStorage.setItem("authenticated", "true");
-  sessionStorage.setItem("username", currentUser.username || "");
-  sessionStorage.setItem("workspace", workspace);
-
-  closeWorkspaceChooser();
-  window.location.href = workspace === "employee" ? "employee.html" : "index.html";
-}
-
-if (login_container && login_signUpBtn && login_signInBtn && login_loginForm && login_signupForm) {
-  // Keep an authenticated user from being shown the login form again.
   if (sessionStorage.getItem("authenticated") && window.location.pathname.includes("login.html")) {
-    const existingWorkspace = sessionStorage.getItem("workspace");
-    if (existingWorkspace === "employee") {
+    const user = getStoredUser();
+
+    if (user?.role === "Staff" && user.employeeId) {
       window.location.href = "employee.html";
-    } else if (existingWorkspace === "hr") {
+      return;
+    }
+
+    if (user?.role === "Admin" || user?.role === "Manager") {
       window.location.href = "index.html";
+      return;
     }
   }
 
-  login_signUpBtn.addEventListener("click", () => {
-    login_container.classList.add("login_sign-up-mode");
+  signUpBtn.addEventListener("click", () => {
+    loginContainer.classList.add("login_sign-up-mode");
+    employeeMessage.textContent = "";
   });
 
-  login_signInBtn.addEventListener("click", () => {
-    login_container.classList.remove("login_sign-up-mode");
+  signInBtn.addEventListener("click", () => {
+    loginContainer.classList.remove("login_sign-up-mode");
+    hrMessage.textContent = "";
   });
 
-  // ======================
-  // SIGN UP
-  // ======================
-  login_signupForm.addEventListener("submit", (event) => {
-    event.preventDefault();
+  async function requestLogin(payload) {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-    const username = document.getElementById("login_signup-username").value.trim();
-    const email = document.getElementById("login_signup-email").value.trim();
-    const password = document.getElementById("login_signup-password").value.trim();
+    const contentType = response.headers.get("content-type") || "";
+    const data = contentType.includes("application/json") ? await response.json() : {};
 
-    if (!username || !email || !password) {
-      alert("Please complete all fields.");
-      return;
+    if (!response.ok) {
+      throw new Error(data.message || "Login failed");
     }
 
-    // New accounts start without a workspace. The user chooses after registration.
-    const user = {
-      username,
-      email,
-      password,
-      role: "Employee",
-      avatar: LOGIN_DEFAULT_AVATAR,
-    };
+    return data;
+  }
 
-    localStorage.setItem("user", JSON.stringify(user));
+  function saveAuthenticatedUser(data) {
+    const user = { ...(data.user || {}) };
+
     localStorage.setItem("currentUser", JSON.stringify(user));
+    localStorage.setItem("user", JSON.stringify(user));
+
+    if (user.employeeId) {
+      localStorage.setItem("employeeId", String(user.employeeId));
+    }
+
+    if (data.token) {
+      localStorage.setItem("authToken", data.token);
+    }
+
     sessionStorage.setItem("authenticated", "true");
-    sessionStorage.setItem("username", username);
+    sessionStorage.setItem(
+      "username",
+      user.username || user.email || String(user.employeeId || "User")
+    );
+    sessionStorage.setItem("role", user.role || "");
+  }
 
-    alert("Account created successfully!");
-    openWorkspaceChooser(user);
-  });
-
-  // ======================
-  // LOGIN
-  // ======================
-  login_loginForm.addEventListener("submit", (event) => {
+  hrForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const username = document.getElementById("login_login-username").value.trim();
-    const password = document.getElementById("login_login-password").value.trim();
+    const username = hrUsernameInput.value.trim();
 
-    if (!username || !password) {
-      alert("Please enter both username and password.");
+    if (!username) {
+      hrMessage.textContent = "Please enter your HR username or email.";
       return;
     }
 
-    const storedUser = getStoredUser();
+    hrSubmit.disabled = true;
+    hrMessage.textContent = "Signing in...";
 
-    if (!storedUser) {
-      alert("No account found. Please sign up first.");
+    try {
+      const data = await requestLogin({ role: "hr", username });
+      saveAuthenticatedUser(data);
+
+      if (data.user?.role === "Staff") {
+        throw new Error("This account is an employee account. Please use Employee Access.");
+      }
+
+      window.location.href = "index.html";
+    } catch (error) {
+      console.error("HR login error:", error);
+      hrMessage.textContent = error.message || "Unable to sign in to the HR system.";
+    } finally {
+      hrSubmit.disabled = false;
+      if (hrPasswordInput) hrPasswordInput.value = "";
+    }
+  });
+
+  employeeForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const employeeId = employeeIdInput.value.trim();
+
+    if (!employeeId) {
+      employeeMessage.textContent = "Please enter your Employee ID.";
       return;
     }
 
-    if (username !== storedUser.username || password !== storedUser.password) {
-      alert("Invalid username or password.");
-      return;
-    }
+    employeeSubmit.disabled = true;
+    employeeMessage.textContent = "Verifying employee access...";
 
-    const currentUser = {
-      ...storedUser,
-      avatar: storedUser.avatar || LOGIN_DEFAULT_AVATAR,
-    };
+    try {
+      const data = await requestLogin({ role: "employee", employeeId });
+      saveAuthenticatedUser(data);
 
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    localStorage.setItem("user", JSON.stringify(currentUser));
-    sessionStorage.setItem("authenticated", "true");
-    sessionStorage.setItem("username", currentUser.username);
+      if (data.user?.role !== "Staff") {
+        throw new Error("This Employee ID is not linked to an employee account.");
+      }
 
-    openWorkspaceChooser(currentUser);
-  });
-}
-
-if (hrWorkspace) {
-  hrWorkspace.addEventListener("click", () => enterWorkspace("hr"));
-}
-
-if (employeeWorkspace) {
-  employeeWorkspace.addEventListener("click", () => enterWorkspace("employee"));
-}
-
-if (workspaceCancel) {
-  workspaceCancel.addEventListener("click", () => {
-    closeWorkspaceChooser();
-    sessionStorage.removeItem("authenticated");
-    sessionStorage.removeItem("workspace");
-    sessionStorage.removeItem("username");
-  });
-}
-
-if (workspaceModal) {
-  workspaceModal.addEventListener("click", (event) => {
-    if (event.target === workspaceModal) {
-      closeWorkspaceChooser();
+      window.location.href = "employee.html";
+    } catch (error) {
+      console.error("Employee access error:", error);
+      employeeMessage.textContent = error.message || "Unable to access the employee portal.";
+    } finally {
+      employeeSubmit.disabled = false;
     }
   });
-}
+})();
