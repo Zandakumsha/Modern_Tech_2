@@ -1,10 +1,6 @@
-// The Express API runs on port 3000. If calendar.html is opened with
-// VS Code Live Server (usually port 5500), relative /api/calendar requests
-// incorrectly go to Live Server and return "Cannot GET /api/calendar".
-const CALENDAR_API =
-  window.location.port && window.location.port !== "3000"
-    ? "http://localhost:3000/api/calendar"
-    : "/api/calendar";
+// All frontend pages are served by Express on port 5000, so the calendar
+// API uses the same origin. This prevents Live Server/port mismatch errors.
+const CALENDAR_API = "/api/calendar";
 
 function calendarUser() {
   const keys = ["currentUser", "user", "loggedInUser"];
@@ -35,11 +31,7 @@ async function calendarRequest(path = "", options = {}) {
   const headers = { ...(options.headers || {}) };
   if (options.body) headers["Content-Type"] = "application/json";
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
+  const response = await fetch(url, { ...options, headers });
   const text = await response.text();
   let body = null;
 
@@ -48,17 +40,13 @@ async function calendarRequest(path = "", options = {}) {
       body = JSON.parse(text);
     } catch {
       body = {
-        error:
-          text.replace(/<[^>]*>/g, " ").trim() ||
-          "Server returned an invalid response.",
+        error: text.replace(/<[^>]*>/g, " ").trim() || "Server returned an invalid response.",
       };
     }
   }
 
   if (!response.ok) {
-    throw new Error(
-      body?.error || `Calendar request failed (${response.status})`,
-    );
+    throw new Error(body?.error || `Calendar request failed (${response.status})`);
   }
 
   return body;
@@ -77,16 +65,7 @@ const eventTimeInput = document.getElementById("eventTime");
 const eventCategoryInput = document.getElementById("eventCategory");
 const eventDescriptionInput = document.getElementById("eventDescription");
 
-if (
-  calendar &&
-  miniCalendar &&
-  monthTitle &&
-  headerMonth &&
-  eventsList &&
-  selectedDateTitle &&
-  selectedDateInput &&
-  eventForm
-) {
+if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selectedDateTitle && selectedDateInput && eventForm) {
   let current = new Date();
   let selectedDateKey = "";
   let selectedDay = null;
@@ -133,12 +112,7 @@ if (
 
     const eventContainer = document.createElement("div");
     eventContainer.className = "calendar-day-events";
-
-    const colors = {
-      Work: "#9b4dff",
-      Personal: "#2ecc71",
-      Urgent: "#ff4d6d",
-    };
+    const colors = { Work: "#9b4dff", Personal: "#2ecc71", Urgent: "#ff4d6d" };
 
     dayEvents.forEach((event) => {
       const item = document.createElement("div");
@@ -157,27 +131,21 @@ if (
         time.textContent = event.time;
         item.appendChild(time);
       }
-
       eventContainer.appendChild(item);
     });
-
     dayDiv.appendChild(eventContainer);
   }
 
   function renderCalendar() {
     calendar.innerHTML = "";
     miniCalendar.innerHTML = "";
-
     const year = current.getFullYear();
     const month = current.getMonth();
     const firstDay = new Date(year, month, 1);
     const totalDays = new Date(year, month + 1, 0).getDate();
     const startDay = firstDay.getDay();
 
-    monthTitle.textContent = current.toLocaleString("default", {
-      month: "long",
-      year: "numeric",
-    });
+    monthTitle.textContent = current.toLocaleString("default", { month: "long", year: "numeric" });
     headerMonth.textContent = monthTitle.textContent;
 
     ["S", "M", "T", "W", "T", "F", "S"].forEach((day) => {
@@ -193,20 +161,11 @@ if (
     }
 
     const today = new Date();
-
     for (let day = 1; day <= totalDays; day++) {
       const dateKey = getDateKey(year, month + 1, day);
       const dayDiv = document.createElement("div");
       dayDiv.className = "day";
-
-      if (
-        day === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear()
-      ) {
-        dayDiv.classList.add("today");
-      }
-
+      if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) dayDiv.classList.add("today");
       if (selectedDateKey === dateKey) dayDiv.classList.add("selected");
 
       const dayNumber = document.createElement("div");
@@ -217,13 +176,8 @@ if (
       if (events[dateKey]?.length) {
         const dot = document.createElement("div");
         dot.className = "dot";
-        const colors = {
-          Work: "#9b4dff",
-          Personal: "#2ecc71",
-          Urgent: "#ff4d6d",
-        };
-        dot.style.background =
-          colors[events[dateKey][0].category] || "#4ea7ff";
+        const colors = { Work: "#9b4dff", Personal: "#2ecc71", Urgent: "#ff4d6d" };
+        dot.style.background = colors[events[dateKey][0].category] || "#4ea7ff";
         dayDiv.appendChild(dot);
         renderDayEvents(dayDiv, dateKey);
       }
@@ -233,13 +187,7 @@ if (
 
       const miniDay = document.createElement("div");
       miniDay.textContent = day;
-      if (
-        day === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear()
-      ) {
-        miniDay.classList.add("today");
-      }
+      if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) miniDay.classList.add("today");
       if (selectedDateKey === dateKey) miniDay.classList.add("selected");
       miniDay.addEventListener("click", () => selectDate(day));
       miniCalendar.appendChild(miniDay);
@@ -248,24 +196,17 @@ if (
 
   function selectDate(day) {
     selectedDay = day;
-    selectedDateKey = getDateKey(
-      current.getFullYear(),
-      current.getMonth() + 1,
-      day,
-    );
-
+    selectedDateKey = getDateKey(current.getFullYear(), current.getMonth() + 1, day);
     const date = new Date(current.getFullYear(), current.getMonth(), day);
     selectedDateInput.value = selectedDateKey;
     selectedDateInput.title = date.toDateString();
     selectedDateTitle.textContent = date.toDateString();
-
     renderCalendar();
     showEvents(selectedDateKey);
   }
 
   function showEvents(key) {
     eventsList.innerHTML = "";
-
     if (!events[key]?.length) {
       eventsList.innerHTML = "<p>No events scheduled for this day.</p>";
       return;
@@ -274,11 +215,7 @@ if (
     events[key].forEach((event) => {
       const div = document.createElement("div");
       div.className = "event";
-      const colors = {
-        Work: "#9b4dff",
-        Personal: "#2ecc71",
-        Urgent: "#ff4d6d",
-      };
+      const colors = { Work: "#9b4dff", Personal: "#2ecc71", Urgent: "#ff4d6d" };
       div.style.borderLeft = `5px solid ${colors[event.category] || "#4ea7ff"}`;
 
       const heading = document.createElement("h4");
@@ -305,10 +242,7 @@ if (
       deleteButton.textContent = "Delete";
       deleteButton.addEventListener("click", async () => {
         try {
-          await calendarRequest(`/${event.id}`, {
-            method: "DELETE",
-            body: JSON.stringify(calendarUser() || {}),
-          });
+          await calendarRequest(`/${event.id}`, { method: "DELETE", body: JSON.stringify(calendarUser() || {}) });
           await loadEvents();
         } catch (error) {
           alert(error.message);
@@ -321,13 +255,11 @@ if (
 
   eventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const user = calendarUser();
     if (!user || !(user.user_id || user.userId || user.id || user.username)) {
       showFormMessage("Please sign in before adding an event.");
       return;
     }
-
     if (!selectedDateKey) {
       showFormMessage("Please select a date first.");
       return;
@@ -343,7 +275,6 @@ if (
       eventTitleInput?.focus();
       return;
     }
-
     if (!time) {
       showFormMessage("Please choose an event time.");
       eventTimeInput?.focus();
@@ -398,22 +329,14 @@ if (
 
   document.getElementById("prevMonth")?.addEventListener("click", () => {
     current.setMonth(current.getMonth() - 1);
-    const maxDay = new Date(
-      current.getFullYear(),
-      current.getMonth() + 1,
-      0,
-    ).getDate();
+    const maxDay = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
     renderCalendar();
     selectDate(Math.min(selectedDay || 1, maxDay));
   });
 
   document.getElementById("nextMonth")?.addEventListener("click", () => {
     current.setMonth(current.getMonth() + 1);
-    const maxDay = new Date(
-      current.getFullYear(),
-      current.getMonth() + 1,
-      0,
-    ).getDate();
+    const maxDay = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
     renderCalendar();
     selectDate(Math.min(selectedDay || 1, maxDay));
   });
