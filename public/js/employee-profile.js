@@ -40,51 +40,9 @@
   function openModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = "flex"; }
   function closeModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = "none"; }
 
-  function populateLeaveForm() {
-    setValue("leave-employee-name", employee.name);
-    setValue("leave-employee-id", employee.employeeId);
-    setValue("leave-department", employee.department);
-    setValue("leave-approver", COMPANY.manager);
-  }
-
-  function calculateLeaveDays() {
-    const start = document.getElementById("emp-leave-from")?.value;
-    const end = document.getElementById("emp-leave-to")?.value;
-    const days = document.getElementById("emp-leave-days");
-    if (!start || !end || !days) return;
-    const value = Math.floor((new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000) + 1;
-    days.value = value > 0 ? value : 0;
-  }
-
-  async function createNotification(type, title, message, payload) {
-    const response = await fetch("/api/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ type, title, message, employeeId: employee.employeeId, employeeName: employee.name, payload }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.message || "Unable to send notification to HR");
-    return data;
-  }
-
-  function downloadLeaveForm(event) {
-    event.preventDefault();
-    const form = document.getElementById("emp-leave-form");
-    if (!form || !form.reportValidity()) return;
-    const data = new FormData(form);
-    const escapeHtml = value => String(value ?? "").replace(/[&<>\"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[ch]));
-    const rows = ["employeeName", "employeeId", "department", "leaveType", "startDate", "endDate", "days", "approver"]
-      .map(key => `<div class="row"><strong>${escapeHtml(key.replace(/([A-Z])/g, " $1"))}</strong><span>${escapeHtml(data.get(key))}</span></div>`).join("");
-    const html = `<!doctype html><html><head><meta charset="UTF-8"><title>${escapeHtml(COMPANY.name)} Leave Request</title><style>body{font-family:Arial;margin:45px;color:#172033}.header{text-align:center;border-bottom:3px solid #00674f;padding-bottom:18px}.header h1{color:#00674f}.row{display:flex;gap:30px;border-bottom:1px solid #ddd;padding:12px}.row strong{width:190px}.reason{border:1px solid #ddd;padding:15px;margin-top:20px;min-height:100px}.sign{display:flex;justify-content:space-between;margin-top:70px}.footer{text-align:center;margin-top:40px;color:#777}</style></head><body><div class="header"><h1>${escapeHtml(COMPANY.name)}</h1><h2>EMPLOYEE LEAVE REQUEST FORM</h2><div>${escapeHtml(COMPANY.address)}<br>${escapeHtml(COMPANY.phone)} • ${escapeHtml(COMPANY.email)}</div></div>${rows}<div class="reason"><strong>Reason for Leave</strong><p>${escapeHtml(data.get("reason"))}</p></div><div class="sign"><span>Employee Signature: ____________________</span><span>Date: ____________________</span></div><div class="sign"><span>HR / Manager Signature: ____________________</span><span>Date: ____________________</span></div><div class="footer">${escapeHtml(COMPANY.hr)} • ${escapeHtml(COMPANY.email)}</div></body></html>`;
-    const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Modern-Tech-Leave-Request-${employee.employeeId}.html`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    closeModal("emp-leave-modal");
+  function goToLeaveRequest(event) {
+    event?.preventDefault();
+    window.location.href = "leave-request.html";
   }
 
   function setupButtons() {
@@ -96,26 +54,12 @@
     ["emp-header-message-btn", "emp-send-message-btn", "emp-send-message-link"].forEach(id => {
       document.getElementById(id)?.addEventListener("click", event => { event.preventDefault(); openModal("emp-message-modal"); });
     });
+
     ["emp-header-leave-btn", "emp-request-leave-link"].forEach(id => {
-      document.getElementById(id)?.addEventListener("click", event => { event.preventDefault(); populateLeaveForm(); openModal("emp-leave-modal"); });
+      document.getElementById(id)?.addEventListener("click", goToLeaveRequest);
     });
+
     ["emp-cancel-message", "emp-close-message-modal"].forEach(id => document.getElementById(id)?.addEventListener("click", () => closeModal("emp-message-modal")));
-    ["emp-cancel-leave", "emp-close-leave-modal"].forEach(id => document.getElementById(id)?.addEventListener("click", () => closeModal("emp-leave-modal")));
-
-    document.getElementById("emp-leave-from")?.addEventListener("change", calculateLeaveDays);
-    document.getElementById("emp-leave-to")?.addEventListener("change", calculateLeaveDays);
-
-    document.getElementById("emp-leave-form")?.addEventListener("submit", async event => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      if (!form.reportValidity()) return;
-      const payload = Object.fromEntries(new FormData(form).entries());
-      try {
-        await createNotification("leave", `Leave request from ${employee.name}`, `Leave request submitted by ${employee.name}.`, payload);
-        downloadLeaveForm(event);
-        alert("Your leave request was sent to HR and the leave form was downloaded.");
-      } catch (error) { alert(error.message); }
-    });
 
     document.getElementById("emp-message-form")?.addEventListener("submit", async event => {
       event.preventDefault();
@@ -123,7 +67,13 @@
       if (!form.reportValidity()) return;
       const payload = Object.fromEntries(new FormData(form).entries());
       try {
-        await createNotification("message", payload.subject || `Message from ${employee.name}`, payload.message, payload);
+        const response = await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ type: "message", title: payload.subject || `Message from ${employee.name}`, message: payload.message, payload }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Unable to send message to HR");
         form.reset();
         closeModal("emp-message-modal");
         alert("Your message has been sent to HR.");
@@ -185,7 +135,6 @@
 
     const subtitle = document.querySelector(".emp-page-subtitle");
     if (subtitle) subtitle.textContent = `Welcome, ${employee.username}. Your employee information is loaded from the Modern Tech database.`;
-    populateLeaveForm();
   }
 
   setupButtons();
