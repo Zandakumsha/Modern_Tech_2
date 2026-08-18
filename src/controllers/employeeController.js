@@ -5,6 +5,19 @@ function getEmployeeId(req) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+async function safeQuery(sql, params, fallback = []) {
+  try {
+    const [rows] = await pool.query(sql, params);
+    return rows;
+  } catch (error) {
+    // Employee profile data should still load when an optional table has no data
+    // or is not available yet. Log the problem for the server developer instead
+    // of making the whole employee profile return 500.
+    console.error("Employee profile optional query failed:", error.message);
+    return fallback;
+  }
+}
+
 export async function getMyEmployeeProfile(req, res) {
   const employeeId = getEmployeeId(req);
 
@@ -13,13 +26,12 @@ export async function getMyEmployeeProfile(req, res) {
   }
 
   try {
-    const [employeeRows] = await pool.query(
-      `SELECT e.employee_id AS employeeId, e.name, e.position, e.department,
-              e.salary, e.employment_history AS employmentHistory, e.contact,
-              u.username, u.email AS accountEmail, u.avatar_url AS avatarUrl
-       FROM employees e
-       LEFT JOIN users u ON u.employee_id = e.employee_id AND u.role = 'Staff'
-       WHERE e.employee_id = ?
+    // The employees table is the source of truth for the employee portal.
+    const employeeRows = await safeQuery(
+      `SELECT employee_id AS employeeId, name, position, department,
+              salary, employment_history AS employmentHistory, contact
+       FROM employees
+       WHERE employee_id = ?
        LIMIT 1`,
       [employeeId]
     );
@@ -27,7 +39,16 @@ export async function getMyEmployeeProfile(req, res) {
     const employee = employeeRows[0];
     if (!employee) return res.status(404).json({ message: "Employee not found" });
 
-    const [payrollRows] = await pool.query(
+    const userRows = await safeQuery(
+      `SELECT username, email AS accountEmail, avatar_url AS avatarUrl
+       FROM users
+       WHERE employee_id = ? AND role = 'Staff'
+       LIMIT 1`,
+      [employeeId]
+    );
+    const user = userRows[0] || {};
+
+    const payrollRows = await safeQuery(
       `SELECT payroll_id AS payrollId, pay_period_start AS payPeriodStart,
               pay_period_end AS payPeriodEnd, hours_worked AS hoursWorked,
               leave_deductions AS leaveDeductions, final_salary AS finalSalary
@@ -36,19 +57,23 @@ export async function getMyEmployeeProfile(req, res) {
       [employeeId]
     );
 
-    const [attendanceRows] = await pool.query(
-      `SELECT SUM(status = 'Present') AS presentDays,
-              SUM(status = 'Absent') AS absentDays
+    const attendanceRows = await safeQuery(
+      `SELECT
+         COALESCE(SUM(CASE WHEN status = 'Present' THEN 1 ELSE 0 END), 0) AS presentDays,
+         COALESCE(SUM(CASE WHEN status = 'Absent' THEN 1 ELSE 0 END), 0) AS absentDays
        FROM attendance WHERE employee_id = ?`,
-      [employeeId]
+      [employeeId],
+      [{}]
     );
 
-    const [leaveRows] = await pool.query(
-      `SELECT SUM(status = 'Approved') AS approvedLeave,
-              SUM(status = 'Pending') AS pendingLeave,
-              SUM(status = 'Denied') AS deniedLeave
+    const leaveRows = await safeQuery(
+      `SELECT
+         COALESCE(SUM(CASE WHEN status = 'Approved' THEN 1 ELSE 0 END), 0) AS approvedLeave,
+         COALESCE(SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END), 0) AS pendingLeave,
+         COALESCE(SUM(CASE WHEN status = 'Denied' THEN 1 ELSE 0 END), 0) AS deniedLeave
        FROM leave_requests WHERE employee_id = ?`,
-      [employeeId]
+      [employeeId],
+      [{}]
     );
 
     const payroll = payrollRows[0] || null;
@@ -59,17 +84,17 @@ export async function getMyEmployeeProfile(req, res) {
       employee: {
         employeeId: employee.employeeId,
         name: employee.name,
-        username: employee.username || employee.name,
-        email: employee.accountEmail || employee.contact,
-        phone: employee.contact,
-        position: employee.position,
-        department: employee.department,
+        username: user.username || employee.name || String(employee.employeeId),
+        email: user.accountEmail || employee.contact || "",
+        phone: employee.contact || "",
+        position: employee.position || "Not specified",
+        department: employee.department || "Not specified",
         salary: Number(employee.salary || 0),
-        employmentHistory: employee.employmentHistory || "",
+        employmentHistory: employee.employmentHistory || "Not recorded",
         employmentStatus: "Active",
         employmentType: "Full-time",
-        manager: "D. Williams",
-        avatarUrl: employee.avatarUrl || null,
+        manager: "HR Manager, Modern Tech",
+        avatarUrl: user.avatarUrl || null,
       },
       payroll: payroll ? {
         payrollId: payroll.payrollId,
