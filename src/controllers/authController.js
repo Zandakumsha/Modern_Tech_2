@@ -65,22 +65,25 @@ function hrUser() {
 }
 
 async function employeeForPasswordlessLogin(id) {
-  const existingUser = await findEmployeeUserById(id);
-  if (existingUser) return existingUser;
-
   // feature/autha uses the existing employees table as the source of employee access.
+  // Do not query the users table here: this branch can authenticate employees before
+  // separate user credentials have been provisioned.
   const [rows] = await pool.query(
-    "SELECT employee_id AS employeeId, name, contact FROM employees WHERE employee_id = ? LIMIT 1",
+    `SELECT employee_id AS employeeId, name, contact
+     FROM employees
+     WHERE employee_id = ?
+     LIMIT 1`,
     [id]
   );
+
   const employee = rows[0];
   if (!employee) return null;
 
   return {
-    userId: `employee-env-${employee.employeeId}`,
+    userId: `employee-${employee.employeeId}`,
     employeeId: employee.employeeId,
     username: employee.name || String(employee.employeeId),
-    email: employee.contact,
+    email: employee.contact || null,
     role: "Staff",
     avatarUrl: null,
   };
@@ -139,7 +142,10 @@ export async function login(req, res) {
     });
   } catch (error) {
     console.error("Login failed:", error);
-    return res.status(500).json({ message: "Error during login", error: error.message });
+    return res.status(500).json({
+      message: "Error during login",
+      error: process.env.NODE_ENV === "production" ? undefined : error.message,
+    });
   }
 }
 
@@ -186,12 +192,12 @@ export async function provisionEmployee(req, res) {
 export async function me(req, res) {
   if (req.user.userId === "hr-env") return res.json(publicUser(hrUser()));
 
-  if (String(req.user.userId || "").startsWith("employee-env-")) {
+  if (String(req.user.userId || "").startsWith("employee-")) {
     return res.json({
       userId: req.user.userId,
       employeeId: req.user.employeeId,
       username: String(req.user.employeeId),
-      email: req.user.email,
+      email: req.user.email || null,
       role: "Staff",
       avatarUrl: null,
     });
