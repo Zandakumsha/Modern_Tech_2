@@ -3,87 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="style.css" />
-    <title>Sign in & Sign up Form</title>
+    <title>Modern Tech | HR & Employee Access</title>
+    <style>
+      .login_message { min-height: 22px; margin: 12px 0 0; font-size: 0.9rem; text-align: center; }
+      .login_form-subtitle { text-align: center; margin: -8px 0 22px; color: #777; }
+      .login_security-note { margin: 18px 0 0; font-size: 0.78rem; color: #777; line-height: 1.5; text-align: center; }
+      @media (max-width: 870px) { .login_form-subtitle { margin-bottom: 16px; } .login_security-note { display: none; } }
+    </style>
   </head>
   <body>
     <div class="login_container">
       <div class="login_forms-container">
         <div class="login_signin-signup">
-          <form action="#" class="login_sign-in-form">
-            <h2 class="login_title">Login</h2>
-            <div class="login_input-field">
-              <i class="fas fa-user"></i>
-              <input
-                id="login_login-username"
-                type="text"
-                placeholder="Username"
-                required
-              />
-            </div>
-            <div class="login_input-field">
-              <i class="fas fa-lock"></i>
-              <input
-                id="login_login-password"
-                type="password"
-                placeholder="Password"
-                required
-              />
-            </div>
-            <input type="submit" value="Login" class="login_btn login_solid" />
-            <p class="login_social-text">Or Sign in with social platforms</p>
-            <div class="login_social-media">
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-google"></i>
-              </a>
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-linkedin-in"></i>
-              </a>
-            </div>
+          <form action="#" class="login_sign-in-form" id="login-auth-form" novalidate>
+            <h2 class="login_title">HR Login</h2>
+            <p class="login_form-subtitle">Sign in to the Modern Tech HR management system</p>
+            <div class="login_input-field"><i class="fas fa-user-tie"></i><input id="login-hr-username" type="text" autocomplete="username" placeholder="HR username or email" required /></div>
+            <div class="login_input-field"><i class="fas fa-lock"></i><input id="login-password" type="password" autocomplete="current-password" placeholder="Password" /></div>
+            <input id="login-submit" type="submit" value="Login to HR" class="login_btn login_solid" />
+            <p id="login-message" class="login_message" aria-live="polite"></p>
+            <p class="login_security-note">HR access is controlled by the server and redirects authorized users to the HR dashboard.</p>
           </form>
-          <form action="#" class="login_sign-up-form">
-            <h2 class="login_title">Sign up</h2>
-            <div class="login_input-field">
-              <i class="fas fa-user"></i>
-              <input
-                id="login_signup-username"
-                type="text"
-                placeholder="Username"
-                required
-              />
-            </div>
-            <div class="login_input-field">
-              <i class="fas fa-envelope"></i>
-              <input
-                id="login_signup-email"
-                type="email"
-                placeholder="Email"
-                required
-              />
-            </div>
-            <div class="login_input-field">
-              <i class="fas fa-lock"></i>
-              <input
-                id="login_signup-password"
-                type="password"
-                placeholder="Password"
-                required
-              />
-            </div>
-            <input type="submit" class="login_btn" value="Sign up" />
-            <p class="login_social-text">Or Sign up with social platforms</p>
-            <div class="login_social-media">
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-google"></i>
-              </a>
-              <a href="#" class="login_social-icon">
-                <i class="fab fa-linkedin-in"></i>
-              </a>
-            </div>
+
+          <form action="#" class="login_sign-up-form" id="employee-auth-form" novalidate>
+            <h2 class="login_title">Employee Access</h2>
+            <p class="login_form-subtitle">Enter your Employee ID to access your employee portal</p>
+            <div class="login_input-field"><i class="fas fa-id-badge"></i><input id="login-employee-id" type="text" inputmode="numeric" autocomplete="username" placeholder="Employee ID" required /></div>
+            <input id="employee-submit" type="submit" class="login_btn" value="Employee Portal" />
+            <p id="employee-message" class="login_message" aria-live="polite"></p>
+            <p class="login_security-note">Employee access is verified by the server using the Employee ID assigned by HR.</p>
           </form>
         </div>
       </div>
@@ -91,24 +41,17 @@
       <div class="login_panels-container">
         <div class="login_panel login_left-panel">
           <div class="login_content">
-            <h3>New here ?</h3>
-            <p>Sign up to our website</p>
-            <button class="login_btn login_transparent" id="login_sign-up-btn">
-              Sign UP
-            </button>
+            <h3>Employee?</h3>
+            <p>Access your employee portal using your Employee ID.</p>
+            <button class="login_btn login_transparent" id="login_sign-up-btn" type="button">Access</button>
           </div>
-          <img src="img/log.svg" class="login_image" alt="" />
         </div>
         <div class="login_panel login_right-panel">
           <div class="login_content">
-            <h3>One of us ?</h3>
-            <p>Login to our website</p>
-            <button class="login_btn login_transparent" id="login_sign-in-btn">
-              Login
-            </button>
+            <h3>HR Team?</h3>
+            <p>Login to manage employees, attendance, payroll and more.</p>
+            <button class="login_btn login_transparent" id="login_sign-in-btn" type="button">HR Login</button>
           </div>
-          <img src="img/register.svg" class="login_image" alt="" />
-        </div>
       </div>
     </div>
 

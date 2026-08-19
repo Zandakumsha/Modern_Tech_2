@@ -1,12 +1,4 @@
 // payroll.js - handles data, modals, calculations, and PDF export
-//
-// UPDATED: now talks to the real Express/MySQL backend (payrollController.js /
-// payroll.routes.js) instead of a static ./payroll_data.json file, and the
-// custom payroll calculator submits to the backend instead of computing
-// everything in the browser. Adjust API_BASE if your router is mounted
-// somewhere other than /api/payroll.
-
-const API_BASE = "/api/payroll";
 
 const modalRoot = document.getElementById("modal-root");
 const employeeCountEl = document.getElementById("dashboard-employees-count");
@@ -15,8 +7,6 @@ const customPayslipCountEl = document.getElementById("dashboard-custom-count");
 const employeeFilterInput = document.getElementById("employee-filter");
 let totalEmployees = 0;
 let customPayslipCount = 0;
-let validPositions = [];
-let validDepartments = [];
 
 function formatNumber(n) {
   if (typeof n !== "number") n = Number(n) || 0;
@@ -37,29 +27,12 @@ function formatDateString(value) {
   });
 }
 
-function normalizePayrollRecord(row) {
-  return {
-    employeeId: row.employee_id,
-    employeeName: row.employee_name,
-    employeePosition: row.employee_position,
-    employeeDepartment: row.employee_department,
-    hoursWorked: row.hours_worked,
-    leaveDeductions: row.leave_deductions,
-    finalSalary: row.final_salary,
-    payPeriodStart: row.pay_period_start,
-    payPeriodEnd: row.pay_period_end,
-  };
-}
-
 async function loadPayrollData() {
   try {
-    const res = await fetch(API_BASE);
+    const res = await fetch("./payroll_data.json");
     if (!res.ok) throw new Error("Unable to load payroll data");
     const data = await res.json();
-    if (!data.success)
-      throw new Error(data.error || "Unable to load payroll data");
-
-    data.payrollData.map(normalizePayrollRecord).forEach((emp) => {
+    data.payrollData.forEach((emp) => {
       const section = document.querySelector(
         `.j-employee-info${emp.employeeId}`,
       );
@@ -71,30 +44,24 @@ async function loadPayrollData() {
           <h2>Employee ${emp.employeeId}</h2>
           <p><strong>Hours Worked:</strong> ${emp.hoursWorked}</p>
           <p><strong>Leave Deductions:</strong> ${emp.leaveDeductions}</p>
-          <p><strong>Final Salary:</strong> R${formatNumber(emp.finalSalary)}</p>
+          <p><strong>Final Salary:</strong> $${formatNumber(emp.finalSalary)}</p>
         `;
         section.insertAdjacentElement("afterbegin", article);
 
+        // attach button listeners inside this section
         const payslipBtn = section.querySelector(".payslip-btn");
         if (payslipBtn) {
-          payslipBtn.addEventListener("click", () =>
-            openPayslipModal(emp.employeeId),
-          );
+          payslipBtn.addEventListener("click", () => openPayslipModal(emp));
         }
 
         const calcBtn = section.querySelector(".calc-btn");
         if (calcBtn) {
-          calcBtn.addEventListener("click", () =>
-            openCalcModal(emp.employeeId),
-          );
+          calcBtn.addEventListener("click", () => openCalcModal(emp));
         }
       }
     });
   } catch (err) {
     console.error(err);
-    alert(
-      "Could not load payroll data from the server. Please try again shortly.",
-    );
   }
 }
 
@@ -138,51 +105,57 @@ function initializeDashboard() {
   }
 }
 
-async function fetchPayslip(employeeId) {
-  const res = await fetch(`${API_BASE}/${employeeId}`);
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.error || "Unable to load payslip for this employee");
-  }
-  const emp = {
-    employeeId: data.employee.employee_id,
-    employeeName: data.employee.employee_name,
-    employeePosition: data.employee.employee_position,
-    employeeDepartment: data.employee.employee_department,
-    payPeriodStart: data.employee.pay_period_start,
-    payPeriodEnd: data.employee.pay_period_end,
+function openPayslipModal(emp) {
+  const values = computePayroll(
+    emp.hoursWorked,
+    emp.leaveDeductions,
+    emp.finalSalary,
+  );
+  const html = buildReceiptHTML(emp, values);
+  openModal({
+    title: `Employee ${emp.employeeId} Payslip`,
+    body: html,
+    type: "receipt",
+  });
+}
+
+function openCalcModal(emp) {
+  const values = computePayroll(
+    emp.hoursWorked,
+    emp.leaveDeductions,
+    emp.finalSalary,
+  );
+  const html = buildCalcHTML(emp, values);
+  openModal({
+    title: `Employee ${emp.employeeId} Calculation`,
+    body: html,
+    type: "calc",
+  });
+}
+
+function computePayroll(hoursWorked, leaveDeductions, finalSalary) {
+  const hw = Number(hoursWorked);
+  const ld = Number(leaveDeductions);
+  const fs = Number(finalSalary);
+  const divisor = hw - ld || 1;
+  const hourly = fs / divisor;
+  const daily = hourly * 8;
+  const weekly = daily * 5;
+  const monthly = weekly * 4;
+  const annual = monthly * 12;
+  const gross = hourly * hw;
+  const totalDeductions = hourly * ld;
+  const net = gross - totalDeductions;
+  return {
+    hourly,
+    daily,
+    weekly,
+    monthly,
+    annual,
+    gross,
+    totalDeductions,
+    net,
   };
-  return { emp, vals: data.payslip };
-}
-
-async function openPayslipModal(employeeId) {
-  try {
-    const { emp, vals } = await fetchPayslip(employeeId);
-    const html = buildReceiptHTML(emp, vals);
-    openModal({
-      title: `Employee ${employeeId} Payslip`,
-      body: html,
-      type: "receipt",
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Could not load this employee's payslip. Please try again.");
-  }
-}
-
-async function openCalcModal(employeeId) {
-  try {
-    const { emp, vals } = await fetchPayslip(employeeId);
-    const html = buildCalcHTML(emp, vals);
-    openModal({
-      title: `Employee ${employeeId} Calculation`,
-      body: html,
-      type: "calc",
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Could not load this employee's calculation. Please try again.");
-  }
 }
 
 function buildReceiptHTML(emp, vals) {
@@ -200,15 +173,15 @@ function buildReceiptHTML(emp, vals) {
       <p><strong>Employee Position:</strong> ${escapeHtml(emp.employeePosition || getEmpPositionFromSection(emp.employeeId) || "")}</p>
       <p><strong>Employee Department:</strong> ${escapeHtml(emp.employeeDepartment || getEmpDeptFromSection(emp.employeeId) || "")}</p>
       <hr>
-      <p><strong>Hourly Salary:</strong> R${formatNumber(vals.hourly)}</p>
-      <p><strong>Daily Salary:</strong> R${formatNumber(vals.daily)}</p>
-      <p><strong>Weekly Salary:</strong> R${formatNumber(vals.weekly)}</p>
-      <p><strong>Monthly Salary:</strong> R${formatNumber(vals.monthly)}</p>
-      <p><strong>Annual Salary:</strong> R${formatNumber(vals.annual)}</p>
+      <p><strong>Hourly Salary:</strong> ${formatNumber(vals.hourly)}</p>
+      <p><strong>Daily Salary:</strong> ${formatNumber(vals.daily)}</p>
+      <p><strong>Weekly Salary:</strong> ${formatNumber(vals.weekly)}</p>
+      <p><strong>Monthly Salary:</strong> ${formatNumber(vals.monthly)}</p>
+      <p><strong>Annual Salary:</strong> ${formatNumber(vals.annual)}</p>
       <p><strong>Pay Period:</strong> ${escapeHtml(emp.payPeriodStart && emp.payPeriodEnd ? `${formatDateString(emp.payPeriodStart)} - ${formatDateString(emp.payPeriodEnd)}` : "01 July 2026 - 31 July 2026")}</p>
-      <p><strong>Gross Pay:</strong> R${formatNumber(vals.gross)}</p>
-      <p><strong>Total Deductions:</strong> R${formatNumber(vals.totalDeductions)}</p>
-      <p><strong>Net Pay:</strong> R${formatNumber(vals.net)}</p>
+      <p><strong>Gross Pay:</strong> ${formatNumber(vals.gross)}</p>
+      <p><strong>Total Deductions:</strong> ${formatNumber(vals.totalDeductions)}</p>
+      <p><strong>Net Pay:</strong> ${formatNumber(vals.net)}</p>
     </div>
   `;
 }
@@ -228,14 +201,14 @@ function buildCalcHTML(emp, vals) {
         <p><strong>Net Pay</strong> = gross pay - total deductions = finalSalary</p>
       </div>
       <hr>
-      <p><strong>Hourly Salary:</strong> R${formatNumber(vals.hourly)}</p>
-      <p><strong>Daily Salary:</strong> R${formatNumber(vals.daily)}</p>
-      <p><strong>Weekly Salary:</strong> R${formatNumber(vals.weekly)}</p>
-      <p><strong>Monthly Salary:</strong> R${formatNumber(vals.monthly)}</p>
-      <p><strong>Annual Salary:</strong> R${formatNumber(vals.annual)}</p>
-      <p><strong>Gross Pay:</strong> R${formatNumber(vals.gross)}</p>
-      <p><strong>Total Deductions:</strong> R${formatNumber(vals.totalDeductions)}</p>
-      <p><strong>Net Pay:</strong> R${formatNumber(vals.net)}</p>
+      <p><strong>Hourly Salary:</strong> ${formatNumber(vals.hourly)}</p>
+      <p><strong>Daily Salary:</strong> ${formatNumber(vals.daily)}</p>
+      <p><strong>Weekly Salary:</strong> ${formatNumber(vals.weekly)}</p>
+      <p><strong>Monthly Salary:</strong> ${formatNumber(vals.monthly)}</p>
+      <p><strong>Annual Salary:</strong> ${formatNumber(vals.annual)}</p>
+      <p><strong>Gross Pay:</strong> ${formatNumber(vals.gross)}</p>
+      <p><strong>Total Deductions:</strong> ${formatNumber(vals.totalDeductions)}</p>
+      <p><strong>Net Pay:</strong> ${formatNumber(vals.net)}</p>
     </div>
   `;
 }
@@ -281,6 +254,7 @@ function getEmpDeptFromSection(id) {
 }
 
 function openModal({ title = "", body = "", type = "receipt" }) {
+  // build modal
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   const modal = document.createElement("div");
@@ -295,6 +269,7 @@ function openModal({ title = "", body = "", type = "receipt" }) {
   const controls = document.createElement("div");
   controls.className = "modal-controls";
 
+  // color pickers
   const colorRow = document.createElement("div");
   colorRow.className = "color-row";
   const bgSelect = document.createElement("select");
@@ -324,6 +299,7 @@ function openModal({ title = "", body = "", type = "receipt" }) {
   modalBody.className = "modal-body";
   modalBody.innerHTML = body;
 
+  // apply color changes
   function applyColors() {
     const bg = bgSelect.value;
     const inner = modalBody.querySelector("[data-type]");
@@ -341,6 +317,7 @@ function openModal({ title = "", body = "", type = "receipt" }) {
         logo.style.color = autoFont;
       }
     }
+    // set modal background for contrast
     modal.style.background = getComputedStyle(document.body).backgroundColor;
   }
   bgSelect.addEventListener("change", applyColors);
@@ -349,6 +326,7 @@ function openModal({ title = "", body = "", type = "receipt" }) {
   modal.appendChild(controls);
   modal.appendChild(modalBody);
 
+  // footer with Download (green) and Exit (red) buttons at bottom
   const footer = document.createElement("div");
   footer.className = "modal-footer";
 
@@ -370,6 +348,7 @@ function openModal({ title = "", body = "", type = "receipt" }) {
   backdrop.appendChild(modal);
   modalRoot.appendChild(backdrop);
 
+  // initial colors
   bgSelect.value = "#ffffff";
   applyColors();
 }
@@ -433,6 +412,7 @@ async function downloadModalAsPDF(modalBody, type) {
   }
 }
 
+// custom payroll form handling
 const form = document.querySelector(".j-payroll-calc-form");
 const payPdStrtInput = document.getElementById("payPdStrt");
 const payPdEndInput = document.getElementById("payPdEnd");
@@ -500,7 +480,7 @@ if (payPdEndInput) {
 }
 
 if (form) {
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
     const data = new FormData(form);
     const empName = data.get("empName") || "";
@@ -513,36 +493,8 @@ if (form) {
     const leaveDeduct = Number(data.get("leaveDeduct"));
     const finSal = Number(data.get("finSal"));
 
-    if (!empName || !empName.trim()) {
-      alert("Employee Name is required. Please fill out all information.");
-      return;
-    }
     if (!empId || empId < 11) {
       alert("Employee ID must be 11 or higher because 1-10 are reserved.");
-      return;
-    }
-    if (!empPosition || !empPosition.trim()) {
-      alert(
-        "Employee Position is required. Please select from the available options.",
-      );
-      return;
-    }
-    if (!empDept || !empDept.trim()) {
-      alert(
-        "Employee Department is required. Please select from the available options.",
-      );
-      return;
-    }
-    if (empPosition && !validPositions.includes(empPosition)) {
-      alert(
-        `Invalid Employee Position. Please select from the available options:\n\n${validPositions.join(", ")}`,
-      );
-      return;
-    }
-    if (empDept && !validDepartments.includes(empDept)) {
-      alert(
-        `Invalid Employee Department. Please select from the available options:\n\n${validDepartments.join(", ")}`,
-      );
       return;
     }
     if (!payPdStrt || !payPdEnd) {
@@ -575,25 +527,12 @@ if (form) {
       alert("Pay period end must be the last day of the same month.");
       return;
     }
-    if (!hrsWorked || hrsWorked <= 0 || isNaN(hrsWorked)) {
-      alert(
-        "Hours Worked is required and must be a positive number. Please fill out all information.",
-      );
-      return;
-    }
-    if (isNaN(leaveDeduct) || leaveDeduct < 0) {
-      alert(
-        "Leave Deductions is required and must be a valid number (0 or greater). Please fill out all information.",
-      );
-      return;
-    }
-    if (!finSal || finSal <= 0 || isNaN(finSal)) {
-      alert(
-        "Final Salary is required and must be a positive number. Please fill out all information.",
-      );
+    if (!hrsWorked || isNaN(finSal)) {
+      alert("Please complete required numeric fields.");
       return;
     }
 
+    // show math loader modal
     const loaderHtml =
       `<div class="math-loader">` +
       `<div class="math-symbol">+</div><div class="math-symbol">-</div><div class="math-symbol">×</div><div class="math-symbol">÷</div>` +
@@ -604,48 +543,25 @@ if (form) {
       type: "loader",
     });
 
-    function closeTopModal() {
+    // after short delay compute and show receipt
+    setTimeout(() => {
+      // close existing loader (there may be multiple modals; remove last one)
       const backdrops = modalRoot.querySelectorAll(".modal-backdrop");
       if (backdrops.length) backdrops[backdrops.length - 1].remove();
-    }
-
-    try {
-      const res = await fetch(API_BASE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          empId,
-          empName,
-          empPosition,
-          empDept,
-          payPdStrt,
-          payPdEnd,
-          hrsWorked,
-          leaveDeduct,
-          finSal,
-        }),
-      });
-      const result = await res.json();
-      closeTopModal();
-
-      if (!res.ok || !result.success) {
-        const message =
-          (result.errors && result.errors.join("\n")) ||
-          result.error ||
-          "Unable to generate payslip. Please try again.";
-        alert(message);
-        return;
-      }
 
       const emp = {
-        employeeId: result.employee.employeeId,
-        employeeName: result.employee.employeeName,
-        employeePosition: result.employee.employeePosition,
-        employeeDepartment: result.employee.employeeDepartment,
-        payPeriodStart: result.payPeriodStart,
-        payPeriodEnd: result.payPeriodEnd,
+        employeeId: empId,
+        hoursWorked: hrsWorked,
+        leaveDeductions: leaveDeduct,
+        finalSalary: finSal,
+        employeeName: empName,
+        employeePosition: empPosition,
+        employeeDepartment: empDept,
+        payPeriodStart: payPdStrt,
+        payPeriodEnd: payPdEnd,
       };
-      const receiptHtml = buildReceiptHTML(emp, result.payslip);
+      const vals = computePayroll(hrsWorked, leaveDeduct, finSal);
+      const receiptHtml = buildReceiptHTML(emp, vals);
       openModal({
         title: `Custom Payslip - ${empName}`,
         body: receiptHtml,
@@ -653,22 +569,17 @@ if (form) {
       });
       customPayslipCount += 1;
       updateCustomPayslipCount();
-      form.reset();
-    } catch (err) {
-      console.error(err);
-      closeTopModal();
-      alert(
-        "Could not reach the server to generate the payslip. Please try again.",
-      );
-    }
+    }, 1200);
   });
 }
 
+// After loading payroll data, normalize card layout (move buttons and bold labels)
 async function normalizeEmployeeSections() {
   const sections = document.querySelectorAll(
     '.j-employee-payroll-calc-info > section[class^="j-employee-info"]',
   );
   sections.forEach((sec) => {
+    // move any buttons that live inside nested subsections into a single footer area
     const nestedButtons = Array.from(sec.querySelectorAll("section button"));
     if (nestedButtons.length) {
       const footer = document.createElement("div");
@@ -677,6 +588,7 @@ async function normalizeEmployeeSections() {
         footer.appendChild(btn);
       });
       sec.appendChild(footer);
+      // remove original static sections (payslip / calculations) as their content duplicates modal output
       const nestedSections = Array.from(
         sec.querySelectorAll(
           'section[class^="j-employee-payslip"], .j-calculations-digital-receipts',
@@ -685,6 +597,7 @@ async function normalizeEmployeeSections() {
       nestedSections.forEach((s) => s.remove());
     }
 
+    // Make top-level label paragraphs bold for the descriptor before ':'
     const topPs = Array.from(sec.querySelectorAll(":scope > p"));
     topPs.forEach((p) => {
       const txt = p.textContent || "";
@@ -698,38 +611,7 @@ async function normalizeEmployeeSections() {
   });
 }
 
-async function populatePositionsDepartmentsDatalist() {
-  try {
-    const res = await fetch(`${API_BASE}/options/positions-departments`);
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      console.warn("Could not fetch positions and departments");
-      return;
-    }
-
-    validPositions = data.positions || [];
-    validDepartments = data.departments || [];
-
-    const positionsDatalist = document.getElementById("positionsList");
-    if (positionsDatalist && data.positions) {
-      positionsDatalist.innerHTML = data.positions
-        .map((pos) => `<option value="${escapeHtml(pos)}"></option>`)
-        .join("");
-    }
-
-    const departmentsDatalist = document.getElementById("departmentsList");
-    if (departmentsDatalist && data.departments) {
-      departmentsDatalist.innerHTML = data.departments
-        .map((dept) => `<option value="${escapeHtml(dept)}"></option>`)
-        .join("");
-    }
-  } catch (err) {
-    console.error("Error populating position/department lists:", err);
-  }
-}
-
+// initialize
 loadPayrollData()
   .then(() => normalizeEmployeeSections())
-  .then(() => populatePositionsDepartmentsDatalist())
   .then(() => initializeDashboard());

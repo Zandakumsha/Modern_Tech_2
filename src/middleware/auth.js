@@ -10,8 +10,8 @@ export default function auth(req, res, next) {
 
   try {
     req.user = jwt.verify(token, JWT_SECRET);
-    next();
-  } catch (error) {
+    return next();
+  } catch {
     return res.status(401).json({ message: "Invalid or expired authentication token" });
   }
 }
