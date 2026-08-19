@@ -1,131 +1,19 @@
 <!doctype html>
 <html lang="en">
-<<<<<<< HEAD
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>Notifications | Modern Tech</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
-    />
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <header class="header">
-      <div class="header__container">
-        <a href="index.html" class="header__logo"
-          ><i class="ri-cloud-fill"></i><span>Modern Tech</span></a
-        >
-        <div class="header__toggle" id="header-toggle">
-          <i class="ri-menu-line"></i>
-        </div>
-      </div>
-    </header>
-    <nav class="sidebar" id="sidebar">
-      <div class="sidebar__container">
-        <div class="sidebar__user">
-          <div class="sidebar__img">
-            <img
-              id="navbarProfileImage"
-              src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg"
-              alt="Profile"
-            />
-          </div>
-          <div class="sidebar__info">
-            <h3 id="sidebar-user-name">HR</h3>
-            <span id="sidebar-user-email">info@moderntech.co.za</span
-            ><span class="user-profile">HR</span>
-          </div>
-        </div>
-        <div class="sidebar__content">
-          <div>
-            <h3 class="sidebar__title">MANAGE</h3>
-            <div class="sidebar__list">
-              <a href="index.html" class="sidebar__link"
-                ><i class="ri-pie-chart-2-fill"></i><span>Dashboard</span></a
-              ><a href="data.html" class="sidebar__link"
-                ><i class="ri-team-fill"></i><span>Employees Data</span></a
-              ><a href="payroll.html" class="sidebar__link"
-                ><i class="ri-secure-payment-fill"></i><span>Payroll</span></a
-              ><a href="attendance.html" class="sidebar__link"
-                ><i class="ri-calendar-event-fill"></i
-                ><span>Attendance</span></a
-              ><a href="calendar.html" class="sidebar__link"
-                ><i class="ri-calendar-fill"></i><span>Calendar</span></a
-              >
-            </div>
-          </div>
-          <div>
-            <h3 class="sidebar__title">SETTINGS</h3>
-            <div class="sidebar__list">
-              <a href="notifications.html" class="sidebar__link active-link"
-                ><i class="ri-notification-3-fill"></i><span>Notifications</span
-                ><span id="notification-count" class="notification-badge"
-                  >0</span
-                ></a
-              ><a href="settings.html" class="sidebar__link"
-                ><i class="ri-settings-3-fill"></i><span>Settings</span></a
-              ><a href="reviews.html" class="sidebar__link"
-                ><i class="ri-mail-unread-fill"></i><span>Reviews</span></a
-              >
-            </div>
-          </div>
-        </div>
-        <div class="sidebar__actions">
-          <div class="sidebar__link" id="theme-button">
-            <i class="ri-moon-clear-fill"></i><span>Theme</span>
-          </div>
-          <div class="sidebar__link" id="logout-btn">
-            <i class="ri-logout-box-r-fill"></i><span>Log Out</span>
-          </div>
-        </div>
-      </div>
-    </nav>
-    <main class="main container">
-      <section class="notifications-page">
-        <div class="main__header">
-          <div>
-            <h1>Notifications</h1>
-            <p>Employee messages and leave requests sent to HR.</p>
-          </div>
-          <button class="settings__btn" id="mark-all-read">
-            Mark all as read
-          </button>
-        </div>
-        <div class="notification-filters">
-          <button class="notification-filter active" data-filter="all">
-            All</button
-          ><button class="notification-filter" data-filter="leave">
-            Leave Requests</button
-          ><button class="notification-filter" data-filter="message">
-            Messages</button
-          ><button class="notification-filter" data-filter="unread">
-            Unread
-          </button>
-        </div>
-        <div id="notifications-list" class="notifications-list">
-          <div class="notification-empty">Loading notifications...</div>
-        </div>
-      </section>
-    </main>
-    <script src="js/core.js"></script>
-    <script src="js/notifications.js"></script>
-  </body>
-</html>
-=======
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Notifications | Modern Tech</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"><link rel="stylesheet" href="style.css">
-<style>
-.request-view-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}.request-view-modal.show{display:flex}.request-view-box{background:#fff;width:min(1050px,100%);max-height:94vh;overflow:auto;border-radius:12px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.request-view-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #ddd}.request-view-head h2{margin:0}.request-view-close{border:0;background:transparent;font-size:30px;cursor:pointer}.leave-preview{padding:22px}.leave-preview-section{border:1px solid #ccc;margin-bottom:18px}.leave-preview-title{background:#050505;color:#fff;font-size:18px;font-weight:700;padding:8px 12px;text-transform:uppercase}.leave-preview-grid{display:grid;grid-template-columns:180px 1fr 180px 1fr}.leave-preview-cell{padding:10px 12px;border-right:1px solid #ccc;border-bottom:1px solid #ccc;min-height:44px}.leave-preview-cell:nth-child(4n){border-right:0}.leave-preview-label{font-weight:700;background:#fafafa}.leave-preview-full{grid-column:1/-1}.leave-preview-cert{text-align:center;font-style:italic;padding:14px;line-height:1.5;border-bottom:1px solid #ccc}.leave-preview-sign{display:grid;grid-template-columns:210px 1fr 70px 220px}.leave-preview-sign>div{padding:10px 12px;border-right:1px solid #ccc}.leave-preview-sign>div:last-child{border-right:0}.leave-preview-actions{display:flex;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid #ddd}.leave-preview-btn{border:1px solid #ccc;border-radius:6px;padding:10px 17px;background:#fff;cursor:pointer;font-weight:700}.leave-preview-btn.primary{background:#1769e0;color:#fff;border-color:#1769e0}.notification-actions{display:flex;align-items:center;gap:8px}.notification-view{border:0;border-radius:6px;padding:8px 12px;background:#1769e0;color:#fff;cursor:pointer;font-weight:700}.notification-read{border:1px solid #ddd;border-radius:6px;padding:8px 10px;background:#fff;cursor:pointer}@media(max-width:700px){.leave-preview-grid{grid-template-columns:1fr 1fr}.leave-preview-sign{grid-template-columns:1fr 1fr}.notification-actions{flex-direction:column;align-items:stretch}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Notifications | Modern Tech</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .request-view-modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}.request-view-modal.show{display:flex}.request-view-box{background:#fff;width:min(980px,100%);max-height:94vh;overflow:auto;border-radius:10px;box-shadow:0 25px 70px rgba(0,0,0,.3)}.request-view-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #ddd}.request-view-head h2{margin:0}.request-view-close{border:0;background:transparent;font-size:30px;cursor:pointer}.leave-preview{padding:22px;background:#ececec}.hr-leave-form{background:#fff;border:1px solid #aaa;padding:18px;max-width:900px;margin:auto;color:#222;font-family:Arial,Helvetica,sans-serif}.hr-leave-title{border:3px solid #222;text-align:center;padding:8px;font-size:25px;font-weight:500;letter-spacing:.5px;margin-bottom:20px}.hr-line-grid{display:grid;grid-template-columns:80px 1fr 42px 1fr;gap:8px;align-items:end;margin:8px 0 18px}.hr-line-grid span,.hr-requested span,.hr-signature-row span,.hr-supervisor-fields span{font-size:12px}.hr-line{border-bottom:1px solid #555;min-height:22px;padding:3px}.hr-section-title{border:2px solid #444;text-align:center;font-weight:700;font-size:13px;padding:6px;text-transform:uppercase;margin:16px 0}.hr-reason-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 20px;padding:0 4px}.hr-reason-option{display:grid;grid-template-columns:24px auto 1fr;align-items:center;gap:5px;min-height:30px;font-size:12px}.hr-box{width:19px;height:19px;border:1px solid #555;display:inline-grid;place-items:center}.hr-reason-line{border-bottom:1px solid #777;min-height:20px}.hr-requested{display:grid;grid-template-columns:70px 1fr 65px 1fr 1fr 170px;gap:7px 9px;align-items:end;font-size:12px;padding:0 8px}.hr-wide{grid-column:2/-1}.hr-signature-row{display:grid;grid-template-columns:100px 1fr 45px 180px;gap:8px;align-items:end;font-size:12px;border-top:1px solid #777;padding-top:13px;margin-top:18px}.hr-supervisor-box{border:3px solid #222;text-align:center;font-size:13px;font-weight:700;padding:7px;margin:15px 0 18px}.hr-comments{min-height:54px;border-top:1px solid #777;border-bottom:1px solid #777;padding:8px;font-size:12px}.hr-supervisor-fields{display:grid;grid-template-columns:90px 1fr;gap:8px;font-size:12px}.leave-preview-actions{display:flex;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid #ddd}.leave-preview-btn{border:1px solid #ccc;border-radius:6px;padding:10px 17px;background:#fff;cursor:pointer;font-weight:700}.leave-preview-btn.primary{background:#1769e0;color:#fff;border-color:#1769e0}.notification-actions{display:flex;align-items:center;gap:8px}.notification-view{border:0;border-radius:6px;padding:8px 12px;background:#1769e0;color:#fff;cursor:pointer;font-weight:700}.notification-read{border:1px solid #ddd;border-radius:6px;padding:8px 10px;background:#fff;cursor:pointer}@media(max-width:700px){.hr-line-grid{grid-template-columns:80px 1fr}.hr-reason-grid{grid-template-columns:1fr}.hr-requested{grid-template-columns:65px 1fr}.hr-wide{grid-column:2}.hr-signature-row{grid-template-columns:100px 1fr}.hr-supervisor-fields{grid-template-columns:1fr}.notification-actions{flex-direction:column;align-items:stretch}.hr-leave-title{font-size:19px}}@media print{.request-view-head,.leave-preview-actions{display:none!important}.leave-preview{padding:0;background:#fff}.hr-leave-form{border:0;box-shadow:none;max-width:none}}
+  </style>
 </head>
 <body>
 <header class="header"><div class="header__container"><a href="index.html" class="header__logo"><i class="ri-cloud-fill"></i><span>Modern Tech</span></a><div class="header__toggle" id="header-toggle"><i class="ri-menu-line"></i></div></div></header>
 <nav class="sidebar" id="sidebar"><div class="sidebar__container"><div class="sidebar__user"><div class="sidebar__img"><img id="navbarProfileImage" src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg" alt="Profile"></div><div class="sidebar__info"><h3 id="sidebar-user-name">HR</h3><span id="sidebar-user-email">info@moderntech.co.za</span><span class="user-profile">HR</span></div></div><div class="sidebar__content"><div><h3 class="sidebar__title">MANAGE</h3><div class="sidebar__list"><a href="index.html" class="sidebar__link"><i class="ri-pie-chart-2-fill"></i><span>Dashboard</span></a><a href="data.html" class="sidebar__link"><i class="ri-team-fill"></i><span>Employees Data</span></a><a href="payroll.html" class="sidebar__link"><i class="ri-secure-payment-fill"></i><span>Payroll</span></a><a href="attendance.html" class="sidebar__link"><i class="ri-calendar-event-fill"></i><span>Attendance</span></a><a href="calendar.html" class="sidebar__link"><i class="ri-calendar-fill"></i><span>Calendar</span></a></div></div><div><h3 class="sidebar__title">SETTINGS</h3><div class="sidebar__list"><a href="notifications.html" class="sidebar__link active-link"><i class="ri-notification-3-fill"></i><span>Notifications</span><span id="notification-count" class="notification-badge">0</span></a><a href="settings.html" class="sidebar__link"><i class="ri-settings-3-fill"></i><span>Settings</span></a><a href="reviews.html" class="sidebar__link"><i class="ri-mail-unread-fill"></i><span>Reviews</span></a></div></div></div><div class="sidebar__actions"><div class="sidebar__link" id="theme-button"><i class="ri-moon-clear-fill"></i><span>Theme</span></div><div class="sidebar__link" id="logout-btn"><i class="ri-logout-box-r-fill"></i><span>Log Out</span></div></div></div></nav>
 <main class="main container"><section class="notifications-page"><div class="main__header"><div><h1>Notifications</h1><p>Employee messages and leave requests sent to HR.</p></div><button class="settings__btn" id="mark-all-read">Mark all as read</button></div><div class="notification-filters"><button class="notification-filter active" data-filter="all">All</button><button class="notification-filter" data-filter="leave">Leave Requests</button><button class="notification-filter" data-filter="message">Messages</button><button class="notification-filter" data-filter="unread">Unread</button></div><div id="notifications-list" class="notifications-list"><div class="notification-empty">Loading notifications...</div></div></section></main>
-<div class="request-view-modal" id="request-view-modal"><div class="request-view-box"><div class="request-view-head"><h2>Leave Request</h2><button class="request-view-close" id="request-view-close">&times;</button></div><div class="leave-preview" id="leave-preview"></div><div class="leave-preview-actions"><button class="leave-preview-btn" id="request-view-close-btn">Close</button><button class="leave-preview-btn primary" id="request-print-btn"><i class="ri-printer-line"></i> Print / Save PDF</button></div></div></div>
+<div class="request-view-modal" id="request-view-modal"><div class="request-view-box"><div class="request-view-head"><h2>Employee Leave Request Form</h2><button class="request-view-close" id="request-view-close" type="button">&times;</button></div><div class="leave-preview" id="leave-preview"></div><div class="leave-preview-actions"><button class="leave-preview-btn" id="request-view-close-btn" type="button">Close</button><button class="leave-preview-btn primary" id="request-print-btn" type="button"><i class="ri-printer-line"></i> Print / Save PDF</button></div></div></div>
 <script src="js/core.js"></script><script src="js/notifications.js"></script>
 </body></html>
->>>>>>> 40c224f6bef2aa3b4dc01c9d0999b1bad638ea66
