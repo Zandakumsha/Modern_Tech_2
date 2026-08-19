@@ -4,13 +4,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import employeesRouter from "./routes/employees.routes.js";
 import authRouter from "./routes/auth.routes.js";
+import payrollRouter from "./routes/payroll.routes.js";
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 5000;
 const publicDirectory = path.join(__dirname, "../public");
 
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/employees", employeesRouter);
+app.use("/api/payroll", payrollRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Modern Tech API is running" });
