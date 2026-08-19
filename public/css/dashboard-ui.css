@@ -19,7 +19,7 @@
 .dashboard_section-content .dashboard_section-header{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 10px;border-bottom:0}
 .dashboard_section-content .dashboard_section-header h2{margin:0;font-size:21px;font-weight:700;color:#17213a}
 .dashboard_section-content .dashboard_section-header h2::before{content:'▣';display:inline-grid;place-items:center;width:34px;height:34px;margin-right:10px;border-radius:10px;background:#eef3ff;color:#4675ed;font-size:17px;vertical-align:middle}
-.dashboard_section-content::before{display:block;content:'DUE DATE                         TASK                              TYPE                         ASSIGNED TO                         STATUS                         NOTES';white-space:pre;color:#8b98af;font-size:11px;font-weight:700;letter-spacing:.45px;padding:12px 26px 10px;border-bottom:1px solid #edf0f4}
+.dashboard_section-content::before{display:block;content:'DUE DATE                         TASK                              TYPE                         ASSIGNED TO                         STATUS                         COMPLETE';white-space:pre;color:#8b98af;font-size:11px;font-weight:700;letter-spacing:.45px;padding:12px 26px 10px;border-bottom:1px solid #edf0f4}
 .dashboard_section-content > div[id]{padding:0 14px}
 .dashboard_task-item{display:grid;grid-template-columns:38px minmax(125px,1.05fr) minmax(170px,1.45fr) minmax(120px,1fr) minmax(130px,1.05fr) minmax(145px,1.1fr) minmax(72px,.6fr);align-items:center;min-height:94px;padding:0 12px;border-bottom:1px solid #e9edf3;background:#fff;position:relative;transition:background .2s ease}
 .dashboard_task-item:last-child{border-bottom:0}
@@ -46,11 +46,17 @@
 .dashboard_task-badge.dashboard_task-progress::before{content:'◷'}
 .dashboard_task-badge.dashboard_task-completed{background:#ddf7ee;color:#11946c}
 .dashboard_task-badge.dashboard_task-completed::before{content:'✓';font-weight:900}
-.dashboard_task-notes{grid-column:7;display:inline-flex;align-items:center;gap:5px;color:#4b6fe8;font-size:14px;font-weight:700;text-decoration:none;background:none;border:0;cursor:pointer;padding:7px}
-.dashboard_task-notes i{font-size:16px}
+.dashboard_task-complete{grid-column:7;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;cursor:pointer;position:relative;transition:background .2s ease}
+.dashboard_task-complete:hover{background:#eef3ff}
+.dashboard_task-complete input{position:absolute;opacity:0;width:1px;height:1px}
+.dashboard_task-checkmark{width:21px;height:21px;border:2px solid #aab5c7;border-radius:5px;background:#fff;display:block;position:relative;transition:all .2s ease}
+.dashboard_task-complete input:checked + .dashboard_task-checkmark{background:#18a979;border-color:#18a979}
+.dashboard_task-complete input:checked + .dashboard_task-checkmark::after{content:'';position:absolute;left:5px;top:2px;width:6px;height:11px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.dashboard_task-complete input:focus-visible + .dashboard_task-checkmark{outline:3px solid rgba(70,117,237,.25);outline-offset:2px}
 .dashboard_task-priority{display:none}
 .dashboard_task-right{display:contents}
-.dashboard_task-avatar,.dashboard_task-actions{display:none}
+.dashboard_task-actions{display:none}
+.dashboard_task-avatar{display:none}
 .dashboard_empty-state{padding:28px 24px!important;text-align:center;color:#8a96a9;font-size:14px;border-bottom:0!important}
 
 @media(max-width:1050px){.dashboard_task-item{grid-template-columns:28px 1.1fr 1.4fr 1fr 1fr 1.1fr 65px;font-size:13px}.dashboard_section-content::before{font-size:9px;padding-left:18px}.dashboard_task-badge{padding:8px 10px;font-size:12px}}
