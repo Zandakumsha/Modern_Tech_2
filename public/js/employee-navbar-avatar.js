@@ -11,28 +11,54 @@
       .join("")
       .toUpperCase() || "E";
 
-  const renderNavbarInitials = () => {
-    const avatar = document.getElementById("emp-profile-avatar");
-    const name = document.getElementById("sidebar-user-name")?.textContent;
+  const getEmployeeName = () => {
+    const sidebarName = document.getElementById("sidebar-user-name")?.textContent?.trim();
+    const profileName = document.getElementById("emp-profile-name")?.textContent?.trim();
 
-    if (!avatar || !name || name === "Employee" || name === "Loading...") return;
+    const validName = (name) =>
+      name && name !== "Employee" && name !== "Loading..." && name !== "—";
 
-    avatar.replaceChildren();
-    avatar.textContent = getInitials(name);
-    avatar.setAttribute("aria-label", `${name} initials`);
+    if (validName(sidebarName)) return sidebarName;
+    if (validName(profileName)) return profileName;
+
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+      return currentUser.name || currentUser.fullName || currentUser.username || "Employee";
+    } catch {
+      return "Employee";
+    }
+  };
+
+  const renderEmployeeInitials = () => {
+    const name = getEmployeeName();
+    const initials = getInitials(name);
+
+    document.querySelectorAll(".emp-avatar-photo").forEach((avatar) => {
+      avatar.replaceChildren();
+      avatar.textContent = initials;
+      avatar.setAttribute("aria-label", `${name} initials`);
+      avatar.setAttribute("title", name);
+    });
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    renderNavbarInitials();
+    renderEmployeeInitials();
 
-    const nameElement = document.getElementById("sidebar-user-name");
-    if (!nameElement) return;
+    ["sidebar-user-name", "emp-profile-name"].forEach((id) => {
+      const nameElement = document.getElementById(id);
+      if (!nameElement) return;
 
-    const observer = new MutationObserver(renderNavbarInitials);
-    observer.observe(nameElement, {
-      childList: true,
-      characterData: true,
-      subtree: true
+      const observer = new MutationObserver(() => {
+        // Wait until employee-profile.js has finished rendering before
+        // replacing any avatar image with the employee's initials.
+        queueMicrotask(renderEmployeeInitials);
+      });
+
+      observer.observe(nameElement, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
     });
   });
 })();
