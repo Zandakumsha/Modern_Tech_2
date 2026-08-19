@@ -1,0 +1,88 @@
+/* Employee salary information actions */
+.emp-card-hd:has(#salary-info-actions) {
+  align-items: flex-start;
+}
+
+.emp-salary-actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.emp-salary-btn {
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: .55rem;
+  padding: .48rem .65rem;
+  font: inherit;
+  font-size: .7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.emp-salary-view {
+  background: var(--primary-light, #dbeafe);
+  color: var(--primary-color, #00674f);
+}
+
+.emp-salary-download {
+  background: var(--primary-color, #00674f);
+  border-color: var(--primary-color, #00674f);
+  color: #fff;
+}
+
+.emp-salary-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem;
+}
+
+.emp-salary-detail-grid > div {
+  padding: .8rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: .65rem;
+  background: var(--surface-color, #f8fafc);
+}
+
+.emp-salary-detail-grid span,
+.emp-salary-detail-grid strong {
+  display: block;
+}
+
+.emp-salary-detail-grid span {
+  margin-bottom: .25rem;
+  color: var(--muted-text, #6b7280);
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.emp-salary-detail-grid strong {
+  font-size: .88rem;
+  overflow-wrap: anywhere;
+}
+
+.emp-salary-detail-grid .emp-salary-net {
+  grid-column: 1 / -1;
+  background: var(--primary-light, #dbeafe);
+  border-color: transparent;
+}
+
+.emp-salary-net strong {
+  color: var(--primary-color, #00674f);
+  font-size: 1.1rem;
+}
+
+.emp-salary-note {
+  margin: 1rem 0 0;
+  color: var(--muted-text, #6b7280);
+  font-size: .75rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .emp-salary-actions { width: 100%; }
+  .emp-salary-btn { flex: 1; }
+  .emp-salary-detail-grid { grid-template-columns: 1fr; }
+  .emp-salary-detail-grid .emp-salary-net { grid-column: auto; }
+}
