@@ -1,175 +1,22 @@
 (() => {
   "use strict";
-
-  const list = document.getElementById("notifications-list");
-  const count = document.getElementById("notification-count");
-  const token = localStorage.getItem("authToken");
-  const user = (() => { try { return JSON.parse(localStorage.getItem("currentUser")) || {}; } catch { return {}; } })();
-  let notifications = [];
-  let filter = "all";
-  let selectedRequest = null;
-
-  if (!token || !["Admin", "Manager"].includes(user.role)) {
-    window.location.replace("login.html");
-    return;
-  }
-
-  const headers = () => ({ Authorization: `Bearer ${token}`, Accept: "application/json" });
-  const escapeHtml = value => String(value ?? "").replace(/[&<>\"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[ch]));
-  const typeLabel = type => type === "leave" ? "Leave Request" : "Employee Message";
-  const typeIcon = type => type === "leave" ? "ri-calendar-event-line" : "ri-message-3-line";
-
-  function payloadOf(notification) {
-    if (!notification) return {};
-    if (notification.payload && typeof notification.payload === "object") return notification.payload;
-    if (typeof notification.payload === "string") {
-      try { return JSON.parse(notification.payload) || {}; } catch { return {}; }
-    }
-    return {};
-  }
-
-  function render() {
-    const visible = notifications.filter(n => filter === "all" || (filter === "unread" ? !Number(n.isRead) : n.type === filter));
-    const unread = notifications.filter(n => !Number(n.isRead)).length;
-    if (count) count.textContent = unread;
-    if (!visible.length) {
-      list.innerHTML = '<div class="notification-empty">No notifications found.</div>';
-      return;
-    }
-    list.innerHTML = visible.map(n => `
-      <article class="notification-card ${Number(n.isRead) ? "read" : "unread"}">
-        <div class="notification-icon"><i class="${typeIcon(n.type)}"></i></div>
-        <div class="notification-content">
-          <div class="notification-top"><span class="notification-type">${escapeHtml(typeLabel(n.type))}</span><time>${new Date(n.createdAt).toLocaleString()}</time></div>
-          <h3>${escapeHtml(n.title)}</h3>
-          <p>${escapeHtml(n.message)}</p>
-          ${n.employeeName ? `<small>From: ${escapeHtml(n.employeeName)}${n.employeeId ? ` (Employee ID: ${escapeHtml(n.employeeId)})` : ""}</small>` : ""}
-        </div>
-        <div class="notification-actions">
-          ${n.type === "leave" ? `<button type="button" class="notification-view" data-view-request="${n.id}"><i class="ri-eye-line"></i> View Request</button>` : ""}
-          <button type="button" class="notification-read" data-read="${n.id}">${Number(n.isRead) ? "Read" : "Mark as read"}</button>
-        </div>
-      </article>`).join("");
-  }
-
-  function renderLeavePreview(notification) {
-    const p = payloadOf(notification);
-    const value = key => escapeHtml(p[key] || "—");
-    const category = Array.isArray(p.reasonCategories) && p.reasonCategories.length ? p.reasonCategories.join(", ") : [p.personal, p.vacation, p.juryAssignment].filter(Boolean).join(", ") || "—";
-    const reasons = [p.personalReason, p.vacationReason, p.juryReason, p.reasonNotes].filter(Boolean).join(" | ") || "—";
-    const employeeName = p.employeeName || notification.employeeName || "Employee";
-    document.getElementById("leave-preview").innerHTML = `
-      <div class="leave-preview-section"><div class="leave-preview-title">Employee Details</div><div class="leave-preview-grid">
-        <div class="leave-preview-cell leave-preview-label">Name:</div><div class="leave-preview-cell">${escapeHtml(employeeName)}</div>
-        <div class="leave-preview-cell leave-preview-label">Date:</div><div class="leave-preview-cell">${value("requestDate")}</div>
-        <div class="leave-preview-cell leave-preview-label">Department:</div><div class="leave-preview-cell">${value("department")}</div>
-        <div class="leave-preview-cell leave-preview-label">Supervisor:</div><div class="leave-preview-cell">${value("supervisor")}</div>
-      </div></div>
-      <div class="leave-preview-section"><div class="leave-preview-title">Time Requesting Off</div><div class="leave-preview-grid">
-        <div class="leave-preview-cell leave-preview-label">Beginning On:</div><div class="leave-preview-cell">${value("startDate")}</div>
-        <div class="leave-preview-cell leave-preview-label">Ending On:</div><div class="leave-preview-cell">${value("endDate")}</div>
-        <div class="leave-preview-cell leave-preview-label">Days:</div><div class="leave-preview-cell">${value("days")}</div>
-        <div class="leave-preview-cell leave-preview-label">Hours:</div><div class="leave-preview-cell">${value("hours")}</div>
-        <div class="leave-preview-cell leave-preview-label">Return to Work:</div><div class="leave-preview-cell">${value("returnDate")}</div>
-        <div class="leave-preview-cell leave-preview-label">Other:</div><div class="leave-preview-cell">${value("other")}</div>
-        <div class="leave-preview-cell leave-preview-label">Notes:</div><div class="leave-preview-cell leave-preview-full">${value("notes")}</div>
-      </div></div>
-      <div class="leave-preview-section"><div class="leave-preview-title">Reason for Request</div><div class="leave-preview-grid">
-        <div class="leave-preview-cell leave-preview-label">Category:</div><div class="leave-preview-cell leave-preview-full">${escapeHtml(category)}</div>
-        <div class="leave-preview-cell leave-preview-label">Reason:</div><div class="leave-preview-cell leave-preview-full">${escapeHtml(reasons)}</div>
-      </div></div>
-      <div class="leave-preview-section"><div class="leave-preview-title">Employee Certification</div><div class="leave-preview-cert">I certify that the above is accurate. I recognize that this request is subject to the approval of management and company policies.</div><div class="leave-preview-sign"><div class="leave-preview-label">Employee Signature:</div><div><em>${escapeHtml(employeeName)}</em></div><div class="leave-preview-label">Date:</div><div>${value("requestDate")}</div></div></div>
-      <div class="leave-preview-section"><div class="leave-preview-title">Employer Decision</div><div class="leave-preview-grid"><div class="leave-preview-cell">Approved</div><div class="leave-preview-cell">☐</div><div class="leave-preview-cell">Not Approved</div><div class="leave-preview-cell">☐</div></div></div>
-      <div class="leave-preview-section"><div class="leave-preview-title">Supervisor / Management Signature</div><div class="leave-preview-sign"><div class="leave-preview-label">Signature:</div><div></div><div class="leave-preview-label">Date:</div><div>${value("managerDate")}</div><div class="leave-preview-label">Name Printed:</div><div>${value("managerName")}</div><div></div><div></div></div></div>`;
-    document.getElementById("request-view-modal")?.classList.add("show");
-  }
-
-  function closeRequestView() {
-    document.getElementById("request-view-modal")?.classList.remove("show");
-    selectedRequest = null;
-  }
-
-  async function load() {
-    try {
-      const response = await fetch("/api/notifications", { headers: headers(), cache: "no-store" });
-      const data = await response.json().catch(() => ({}));
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem("authToken");
-        window.location.replace("login.html");
-        return;
-      }
-      if (!response.ok) throw new Error(data.message || "Unable to load notifications");
-      notifications = data.notifications || [];
-      render();
-    } catch (error) {
-      console.error(error);
-      list.innerHTML = `<div class="notification-empty">Unable to load notifications: ${escapeHtml(error.message)}</div>`;
-    }
-  }
-
-  list?.addEventListener("click", async event => {
-    const viewButton = event.target.closest("[data-view-request]");
-    if (viewButton) {
-      selectedRequest = notifications.find(n => String(n.id) === viewButton.dataset.viewRequest);
-      if (selectedRequest) {
-        renderLeavePreview(selectedRequest);
-        if (!Number(selectedRequest.isRead)) {
-          try {
-            await fetch(`/api/notifications/${selectedRequest.id}/read`, { method: "PATCH", headers: headers() });
-            selectedRequest.isRead = 1;
-            render();
-          } catch (error) { console.error(error); }
-        }
-      }
-      return;
-    }
-
-    const button = event.target.closest("[data-read]");
-    if (!button) return;
-    try {
-      const response = await fetch(`/api/notifications/${button.dataset.read}/read`, { method: "PATCH", headers: headers() });
-      if (!response.ok) throw new Error("Unable to mark notification as read");
-      const item = notifications.find(n => String(n.id) === button.dataset.read);
-      if (item) item.isRead = 1;
-      render();
-    } catch (error) { alert(error.message); }
-  });
-
-  document.querySelectorAll(".notification-filter").forEach(button => button.addEventListener("click", () => {
-    document.querySelectorAll(".notification-filter").forEach(b => b.classList.remove("active"));
-    button.classList.add("active");
-    filter = button.dataset.filter;
-    render();
-  }));
-
-  document.getElementById("mark-all-read")?.addEventListener("click", async () => {
-    try {
-      const response = await fetch("/api/notifications/read-all", { method: "PATCH", headers: headers() });
-      if (!response.ok) throw new Error("Unable to mark notifications as read");
-      notifications.forEach(n => n.isRead = 1);
-      render();
-    } catch (error) { alert(error.message); }
-  });
-
-  document.getElementById("request-view-close")?.addEventListener("click", closeRequestView);
-  document.getElementById("request-view-close-btn")?.addEventListener("click", closeRequestView);
-  document.getElementById("request-view-modal")?.addEventListener("click", event => {
-    if (event.target.id === "request-view-modal") closeRequestView();
-  });
-  document.getElementById("request-print-btn")?.addEventListener("click", () => {
-    if (!selectedRequest) return;
-    const preview = document.getElementById("leave-preview")?.innerHTML || "";
-    const win = window.open("", "_blank", "width=1100,height=900");
-    if (!win) { alert("Please allow pop-ups to print the request."); return; }
-    win.document.write(`<html><head><title>Leave Request</title><style>body{font-family:Arial;margin:25px}.leave-preview-section{border:1px solid #ccc;margin-bottom:16px}.leave-preview-title{background:#050505;color:#fff;padding:8px;font-weight:bold;text-transform:uppercase}.leave-preview-grid{display:grid;grid-template-columns:180px 1fr 180px 1fr}.leave-preview-cell{padding:9px;border-right:1px solid #ccc;border-bottom:1px solid #ccc}.leave-preview-label{font-weight:bold;background:#fafafa}.leave-preview-full{grid-column:1/-1}.leave-preview-cert{text-align:center;font-style:italic;padding:14px}.leave-preview-sign{display:grid;grid-template-columns:210px 1fr 70px 220px}.leave-preview-sign>div{padding:9px;border-right:1px solid #ccc}</style></head><body>${preview}</body></html>`);
-    win.document.close(); win.focus(); setTimeout(() => win.print(), 300);
-  });
-
-  document.getElementById("logout-btn")?.addEventListener("click", () => {
-    ["authToken", "currentUser", "user", "employeeId"].forEach(k => localStorage.removeItem(k));
-    ["authenticated", "username", "role"].forEach(k => sessionStorage.removeItem(k));
-    window.location.replace("login.html");
-  });
-
-  load();
+  const list=document.getElementById("notifications-list"),count=document.getElementById("notification-count"),token=localStorage.getItem("authToken");
+  const user=(()=>{try{return JSON.parse(localStorage.getItem("currentUser"))||{}}catch{return{}}})();let notifications=[],filter="all",selectedRequest=null;
+  if(!token||!["Admin","Manager"].includes(user.role)){window.location.replace("login.html");return;}
+  const headers=()=>({Authorization:`Bearer ${token}`,Accept:"application/json"});
+  const escapeHtml=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  const payloadOf=n=>{if(!n)return{};if(n.payload&&typeof n.payload==="object")return n.payload;if(typeof n.payload==="string"){try{return JSON.parse(n.payload)||{}}catch{return{}}}return{}};
+  const typeLabel=t=>t==="leave"?"Leave Request":"Employee Message",typeIcon=t=>t==="leave"?"ri-calendar-event-line":"ri-message-3-line";
+  function render(){const visible=notifications.filter(n=>filter==="all"||(filter==="unread"?!Number(n.isRead):n.type===filter)),unread=notifications.filter(n=>!Number(n.isRead)).length;if(count)count.textContent=unread;if(!visible.length){list.innerHTML='<div class="notification-empty">No notifications found.</div>';return;}list.innerHTML=visible.map(n=>`<article class="notification-card ${Number(n.isRead)?"read":"unread"}"><div class="notification-icon"><i class="${typeIcon(n.type)}"></i></div><div class="notification-content"><div class="notification-top"><span class="notification-type">${escapeHtml(typeLabel(n.type))}</span><time>${new Date(n.createdAt).toLocaleString()}</time></div><h3>${escapeHtml(n.title)}</h3><p>${escapeHtml(n.message)}</p>${n.employeeName?`<small>From: ${escapeHtml(n.employeeName)}${n.employeeId?` (Employee ID: ${escapeHtml(n.employeeId)})`:""}</small>`:""}</div><div class="notification-actions">${n.type==="leave"?`<button type="button" class="notification-view" data-view-request="${n.id}"><i class="ri-eye-line"></i> View Request</button>`:""}<button type="button" class="notification-read" data-read="${n.id}">${Number(n.isRead)?"Read":"Mark as read"}</button></div></article>`).join("");}
+  function reasonMap(p){const map={vacation:"Vacation",juryAssignment:"Civil Leave/Jury Duty",military:"Military",sickSelf:"Sick - Self",sickFamily:"Sick - Family",appointment:"Sick - Doctor Appointment",workersComp:"Workers Compensation",familyMedical:"Family and Medical",leaveAbsence:"Leave of Absence",funeral:"Funeral Relationship",otherReasonType:"Other"};return Array.isArray(p.reasonCategories)&&p.reasonCategories.length?p.reasonCategories:Object.keys(map).filter(k=>p[k]).map(k=>map[k]);}
+  function reasonText(p,key){return escapeHtml(p[key]||"");}
+  function renderLeavePreview(notification){const p=payloadOf(notification),employeeName=p.employeeName||notification.employeeName||"Employee",reasons=reasonMap(p),checked=label=>reasons.includes(label)?"✓":"";const v=k=>escapeHtml(p[k]||"—");document.getElementById("leave-preview").innerHTML=`<div class="hr-leave-form"><div class="hr-leave-title">Employee Leave Request Form</div><div class="hr-line-grid"><span>Employee Name</span><div class="hr-line">${escapeHtml(employeeName)}</div><span>Date</span><div class="hr-line">${v("requestDate")}</div><span>Department</span><div class="hr-line">${v("department")}</div><span>Supervisor Name</span><div class="hr-line">${v("supervisor")}</div></div><div class="hr-section-title">Reason for Leave</div><div class="hr-reason-grid">${[["Vacation","vacationReason"],["Civil Leave/Jury Duty","juryReason"],["Military","militaryReason"],["Sick - Self","sickSelfReason"],["Sick - Family","sickFamilyReason"],["Sick - Dr Appointment","appointmentReason"],["Workers Comp","workersCompReason"],["Family and Medical","familyMedicalReason"],["Leave of Absence","leaveAbsenceReason"],["Funeral Relationship","funeralReason"],["Other","other"]].map(([label,key])=>`<div class="hr-reason-option"><span class="hr-box">${checked(label)||checked(label==="Sick - Dr Appointment"?"Sick - Doctor Appointment":label)}</span><span>${label}</span><span class="hr-reason-line">${reasonText(p,key)}</span></div>`).join("")}</div><div class="hr-section-title">Leave Requested</div><div class="hr-requested"><span>From</span><div class="hr-line">${v("startDate")}</div><span>Time</span><div class="hr-line">${v("startTime")}</div><span>a.m./p.m.</span><span>Total Number of Hours Requested</span><div class="hr-line">${v("hours")}</div><span>To</span><div class="hr-line">${v("endDate")}</div><span>Time</span><div class="hr-line">${v("endTime")}</div><span>a.m./p.m.</span><span>Total Number of Days Requested</span><div class="hr-line">${v("days")}</div><span>Other</span><div class="hr-line hr-wide">${v("other")} ${v("reasonNotes")}</div><span class="hr-wide">Additional Notes</span><div class="hr-line hr-wide">${v("notes")}</div></div><div class="hr-signature-row"><span>Employee Signature</span><div class="hr-line">${escapeHtml(employeeName)}</div><span>Date</span><div class="hr-line">${v("requestDate")}</div></div><div class="hr-supervisor-box">SUPERVISOR USE ONLY</div><div class="hr-comments"><b>Comments:</b> ${v("comments")}</div><div class="hr-supervisor-fields"><span>Approved By:</span><div class="hr-line">${v("managerName")}</div><span>Supervisor Signature:</span><div class="hr-line">${v("managerSignature")}</div><span>Date:</span><div class="hr-line">${v("managerDate")}</div></div></div>`;document.getElementById("request-view-modal")?.classList.add("show");}
+  function closeRequestView(){document.getElementById("request-view-modal")?.classList.remove("show");selectedRequest=null;}
+  async function load(){try{const r=await fetch("/api/notifications",{headers:headers(),cache:"no-store"}),d=await r.json().catch(()=>({}));if(r.status===401||r.status===403){localStorage.removeItem("authToken");window.location.replace("login.html");return;}if(!r.ok)throw new Error(d.message||"Unable to load notifications");notifications=d.notifications||[];render();}catch(e){console.error(e);list.innerHTML=`<div class="notification-empty">Unable to load notifications: ${escapeHtml(e.message)}</div>`;}}
+  list?.addEventListener("click",async e=>{const view=e.target.closest("[data-view-request]");if(view){selectedRequest=notifications.find(n=>String(n.id)===view.dataset.viewRequest);if(selectedRequest){renderLeavePreview(selectedRequest);if(!Number(selectedRequest.isRead)){try{await fetch(`/api/notifications/${selectedRequest.id}/read`,{method:"PATCH",headers:headers()});selectedRequest.isRead=1;render();}catch(err){console.error(err);}}}return;}const button=e.target.closest("[data-read]");if(!button)return;try{const r=await fetch(`/api/notifications/${button.dataset.read}/read`,{method:"PATCH",headers:headers()});if(!r.ok)throw new Error("Unable to mark notification as read");const item=notifications.find(n=>String(n.id)===button.dataset.read);if(item)item.isRead=1;render();}catch(err){alert(err.message);}});
+  document.querySelectorAll(".notification-filter").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".notification-filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");filter=b.dataset.filter;render();}));
+  document.getElementById("mark-all-read")?.addEventListener("click",async()=>{try{const r=await fetch("/api/notifications/read-all",{method:"PATCH",headers:headers()});if(!r.ok)throw new Error("Unable to mark notifications as read");notifications.forEach(n=>n.isRead=1);render();}catch(e){alert(e.message);}});
+  document.getElementById("request-view-close")?.addEventListener("click",closeRequestView);document.getElementById("request-view-close-btn")?.addEventListener("click",closeRequestView);document.getElementById("request-view-modal")?.addEventListener("click",e=>{if(e.target.id==="request-view-modal")closeRequestView();});
+  document.getElementById("request-print-btn")?.addEventListener("click",()=>{if(!selectedRequest)return;const preview=document.getElementById("leave-preview")?.innerHTML||"",win=window.open("","_blank","width=1100,height=900");if(!win){alert("Please allow pop-ups to print the request.");return;}win.document.write(`<html><head><title>Employee Leave Request Form</title><style>body{font-family:Arial;margin:0;padding:20px;background:#fff}.hr-leave-form{max-width:900px;margin:auto;border:1px solid #aaa;padding:18px}.hr-leave-title{border:3px solid #222;text-align:center;padding:8px;font-size:25px;margin-bottom:20px}.hr-line-grid{display:grid;grid-template-columns:80px 1fr 42px 1fr;gap:8px;align-items:end;margin:8px 0 18px}.hr-line{border-bottom:1px solid #555;min-height:22px;padding:3px}.hr-section-title,.hr-supervisor-box{border:2px solid #444;text-align:center;font-weight:700;font-size:13px;padding:6px;text-transform:uppercase;margin:16px 0}.hr-supervisor-box{border-width:3px}.hr-reason-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 20px}.hr-reason-option{display:grid;grid-template-columns:24px auto 1fr;gap:5px;font-size:12px;align-items:center}.hr-box{width:19px;height:19px;border:1px solid #555;text-align:center}.hr-reason-line{border-bottom:1px solid #777;min-height:20px}.hr-requested{display:grid;grid-template-columns:70px 1fr 65px 1fr 1fr 170px;gap:7px 9px;align-items:end;font-size:12px}.hr-wide{grid-column:2/-1}.hr-signature-row{display:grid;grid-template-columns:100px 1fr 45px 180px;gap:8px;border-top:1px solid #777;padding-top:13px;margin-top:18px;font-size:12px}.hr-comments{min-height:54px;border-top:1px solid #777;border-bottom:1px solid #777;padding:8px;font-size:12px}.hr-supervisor-fields{display:grid;grid-template-columns:90px 1fr;gap:8px;font-size:12px}</style></head><body>${preview}</body></html>`);win.document.close();win.focus();setTimeout(()=>win.print(),300);});
+  document.getElementById("logout-btn")?.addEventListener("click",()=>{["authToken","currentUser","user","employeeId"].forEach(k=>localStorage.removeItem(k));["authenticated","username","role"].forEach(k=>sessionStorage.removeItem(k));window.location.replace("login.html");});load();
 })();
