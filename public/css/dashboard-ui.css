@@ -19,9 +19,9 @@
 .dashboard_section-content .dashboard_section-header{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 10px;border-bottom:0}
 .dashboard_section-content .dashboard_section-header h2{margin:0;font-size:21px;font-weight:700;color:#17213a}
 .dashboard_section-content .dashboard_section-header h2::before{content:'▣';display:inline-grid;place-items:center;width:34px;height:34px;margin-right:10px;border-radius:10px;background:#eef3ff;color:#4675ed;font-size:17px;vertical-align:middle}
-.dashboard_section-content::before{display:block;content:'DUE DATE                         TASK                              TYPE                         ASSIGNED TO                         STATUS                         COMPLETE';white-space:pre;color:#8b98af;font-size:11px;font-weight:700;letter-spacing:.45px;padding:12px 26px 10px;border-bottom:1px solid #edf0f4}
+.dashboard_section-content::before{display:block;content:'DUE DATE                         TASK                              TYPE                         ASSIGNED TO                         STATUS                         COMPLETE                    ACTIONS';white-space:pre;color:#8b98af;font-size:11px;font-weight:700;letter-spacing:.45px;padding:12px 26px 10px;border-bottom:1px solid #edf0f4}
 .dashboard_section-content > div[id]{padding:0 14px}
-.dashboard_task-item{display:grid;grid-template-columns:38px minmax(125px,1.05fr) minmax(170px,1.45fr) minmax(120px,1fr) minmax(130px,1.05fr) minmax(145px,1.1fr) minmax(72px,.6fr);align-items:center;min-height:94px;padding:0 12px;border-bottom:1px solid #e9edf3;background:#fff;position:relative;transition:background .2s ease}
+.dashboard_task-item{display:grid;grid-template-columns:38px minmax(125px,1.05fr) minmax(170px,1.45fr) minmax(120px,1fr) minmax(130px,1.05fr) minmax(145px,1.1fr) minmax(58px,.45fr) minmax(104px,.8fr);align-items:center;min-height:94px;padding:0 12px;border-bottom:1px solid #e9edf3;background:#fff;position:relative;transition:background .2s ease}
 .dashboard_task-item:last-child{border-bottom:0}
 .dashboard_task-item:hover{background:#fbfcff}
 .dashboard_task-checkbox{position:absolute;opacity:0;pointer-events:none}
@@ -55,10 +55,14 @@
 .dashboard_task-complete input:focus-visible + .dashboard_task-checkmark{outline:3px solid rgba(70,117,237,.25);outline-offset:2px}
 .dashboard_task-priority{display:none}
 .dashboard_task-right{display:contents}
-.dashboard_task-actions{display:none}
-.dashboard_task-avatar{display:none}
+.dashboard_task-actions{grid-column:8;display:flex;align-items:center;justify-content:flex-end;gap:7px}
+.dashboard_task-action-btn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dce2ea;border-radius:9px;background:#fff;color:#4b6fe8;font-size:17px;cursor:pointer;transition:all .2s ease}
+.dashboard_task-action-btn:hover{background:#eef3ff;border-color:#bfcdf7;color:#315bd2;transform:translateY(-1px)}
+.dashboard_task-action-btn:focus-visible{outline:3px solid rgba(70,117,237,.22);outline-offset:2px}
+.dashboard_task-delete-btn{color:#d75b67}
+.dashboard_task-delete-btn:hover{background:#fff0f1;border-color:#f2c2c7;color:#c93645}
 .dashboard_empty-state{padding:28px 24px!important;text-align:center;color:#8a96a9;font-size:14px;border-bottom:0!important}
 
-@media(max-width:1050px){.dashboard_task-item{grid-template-columns:28px 1.1fr 1.4fr 1fr 1fr 1.1fr 65px;font-size:13px}.dashboard_section-content::before{font-size:9px;padding-left:18px}.dashboard_task-badge{padding:8px 10px;font-size:12px}}
-@media(max-width:780px){.dashboard_section-content{overflow-x:auto}.dashboard_section-content::before{min-width:760px}.dashboard_task-item{min-width:760px;grid-template-columns:30px 115px 170px 120px 120px 140px 65px}.dashboard_section-content .dashboard_section-header{min-width:760px}}
+@media(max-width:1150px){.dashboard_task-item{grid-template-columns:28px 105px 1.3fr 95px 105px 125px 50px 88px}.dashboard_section-content::before{font-size:9px;padding-left:18px}.dashboard_task-badge{padding:8px 10px;font-size:12px}.dashboard_task-action-btn{width:32px;height:32px;font-size:15px}}
+@media(max-width:780px){.dashboard_section-content{overflow-x:auto}.dashboard_section-content::before{min-width:860px}.dashboard_task-item{min-width:860px;grid-template-columns:30px 115px 170px 120px 120px 140px 58px 104px}.dashboard_section-content .dashboard_section-header{min-width:860px}}
 @media(max-width:520px){.dashboard_modal{padding:14px}.dashboard_modal-content{padding:22px;border-radius:16px}.dashboard_modal-actions{flex-direction:column-reverse}.dashboard_btn{width:100%}}
