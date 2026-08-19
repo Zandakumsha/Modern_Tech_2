@@ -181,16 +181,16 @@
   overflow: hidden;
 }
 
-.emp-avatar-photo img { 
-  width: 100%; 
-  height: fit-content; 
-  object-fit: cover; 
+.emp-avatar-photo img {
+  width: 100%;
+  height: fit-content;
+  object-fit: cover;
 }
 
-.emp-p-name { 
-  margin: 0; 
-  font-size: 1rem; 
-  font-weight: 800; 
+.emp-p-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 .emp-p-mail { margin: .25rem 0 1rem; color: var(--muted-text, #6b7280); font-size: .78rem; overflow-wrap: anywhere; }
