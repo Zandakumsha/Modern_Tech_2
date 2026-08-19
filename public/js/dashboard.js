@@ -111,15 +111,18 @@ function createTaskItem(task) {
   statusWrap.appendChild(badge);
   item.appendChild(statusWrap);
 
-  const notes = document.createElement("button");
-  notes.type = "button";
-  notes.className = "dashboard_task-notes";
-  notes.innerHTML = '<i class="ri-file-text-line"></i><span>Notes</span>';
-  notes.addEventListener("click", () => {
-    if (task.notes) alert(task.notes);
-    else alert("No notes have been added to this task.");
-  });
-  item.appendChild(notes);
+  const completeLabel = document.createElement("label");
+  completeLabel.className = "dashboard_task-complete";
+  completeLabel.title = task.completed ? "Move task back to On Hold" : "Mark task as completed";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = Boolean(task.completed);
+  checkbox.setAttribute("aria-label", task.completed ? `Move ${task.title} back to On Hold` : `Mark ${task.title} as completed`);
+  checkbox.addEventListener("change", event => toggleTaskCompletion(task.id, event.target.checked));
+  const checkmark = document.createElement("span");
+  checkmark.className = "dashboard_task-checkmark";
+  completeLabel.append(checkbox, checkmark);
+  item.appendChild(completeLabel);
 
   const actions = document.createElement("div");
   actions.className = "dashboard_task-actions";
