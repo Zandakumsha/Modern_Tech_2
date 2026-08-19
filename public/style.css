@@ -4375,6 +4375,26 @@ button:disabled {
   color: var(--muted-text);
 }
 
+/* Date input styling */
+
+.j-payroll-calc-form input[type="date"] {
+  border-radius: 12px;
+
+  border: 1px solid var(--border-color) !important;
+
+  background: var(--input-bg);
+
+  color: var(--text-color);
+}
+
+.j-payroll-calc-form input[type="date"]:focus {
+  outline: none;
+
+  border-color: var(--primary-color) !important;
+
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+
 /* Explicit grid positioning */
 
 .j-payroll-calc-form > label {
