@@ -13,7 +13,7 @@
 .emp-salary-btn {
   border: 1px solid var(--border-color, #e5e7eb);
   border-radius: .55rem;
-  padding: .48rem .65rem;
+  padding: .48rem .7rem;
   font: inherit;
   font-size: .7rem;
   font-weight: 800;
@@ -31,58 +31,216 @@
   color: #fff;
 }
 
-.emp-salary-detail-grid {
+.emp-salary-modal-box {
+  width: min(900px, 100%);
+}
+
+.emp-salary-modal-head {
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  padding-bottom: .9rem;
+}
+
+/* Salary slip template inspired by the supplied reference layout */
+.emp-payslip {
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid #747474;
+  color: #1f2528;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.emp-payslip-top {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .8rem;
+  grid-template-columns: 1fr 1.75fr 1.1fr;
+  border-bottom: 1px solid #555;
 }
 
-.emp-salary-detail-grid > div {
-  padding: .8rem;
-  border: 1px solid var(--border-color, #e5e7eb);
-  border-radius: .65rem;
-  background: var(--surface-color, #f8fafc);
+.emp-payslip-brand,
+.emp-payslip-confidential {
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+  padding: .65rem;
+  background: #52642a;
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-align: center;
 }
 
-.emp-salary-detail-grid span,
-.emp-salary-detail-grid strong {
+.emp-payslip-confidential {
+  background: #edf0df;
+  color: #2c3919;
+  border-left: 1px solid #555;
+}
+
+.emp-payslip-title {
+  padding: .5rem .75rem;
+  text-align: center;
+  border-left: 1px solid #555;
+}
+
+.emp-payslip-title h2 {
+  margin: 0;
+  font-size: 1.55rem;
+  letter-spacing: .05em;
+}
+
+.emp-payslip-title span {
+  display: block;
+  margin-top: .3rem;
+  padding-top: .3rem;
+  border-top: 1px solid #777;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.emp-payslip-personal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.emp-payslip-personal-col {
+  padding: .6rem .75rem;
+  border-bottom: 1px solid #555;
+}
+
+.emp-payslip-personal-col + .emp-payslip-personal-col {
+  border-left: 1px solid #555;
+}
+
+.emp-payslip-personal-col div {
+  display: grid;
+  grid-template-columns: minmax(90px, 120px) 1fr;
+  gap: .45rem;
+  padding: .28rem 0;
+  font-size: .75rem;
+}
+
+.emp-payslip-personal-col span::after {
+  content: ":";
+  float: right;
+}
+
+.emp-payslip-table {
+  border-bottom: 1px solid #555;
+}
+
+.emp-payslip-head,
+.emp-payslip-row,
+.emp-payslip-total {
+  display: grid;
+  grid-template-columns: 1.6fr .8fr .8fr;
+}
+
+.emp-payslip-head > * {
+  padding: .4rem .6rem;
+  background: #52642a;
+  color: #fff;
+  border-right: 1px solid #3d4a1e;
+  font-size: .74rem;
+  text-align: center;
+}
+
+.emp-payslip-row > *,
+.emp-payslip-total > * {
+  min-height: 18px;
+  padding: .42rem .6rem;
+  border-right: 1px solid #a5a5a5;
+  font-size: .74rem;
+}
+
+.emp-payslip-row span:nth-child(2),
+.emp-payslip-row span:nth-child(3),
+.emp-payslip-total b:not(:first-child) {
+  text-align: right;
+}
+
+.emp-payslip-spacer {
+  min-height: 70px;
+}
+
+.emp-payslip-total > * {
+  border-top: 1px solid #555;
+}
+
+.emp-payslip-total b:not(:first-child) {
+  font-size: .9rem;
+}
+
+.emp-payslip-bottom {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+}
+
+.emp-payslip-bottom > div {
+  padding: .65rem .75rem;
+}
+
+.emp-payslip-bottom span,
+.emp-payslip-bottom b {
   display: block;
 }
 
-.emp-salary-detail-grid span {
-  margin-bottom: .25rem;
-  color: var(--muted-text, #6b7280);
-  font-size: .68rem;
-  font-weight: 700;
+.emp-payslip-bottom span {
+  font-size: .67rem;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
-.emp-salary-detail-grid strong {
-  font-size: .88rem;
-  overflow-wrap: anywhere;
+.emp-payslip-bottom b {
+  margin-top: .25rem;
+  font-size: .78rem;
 }
 
-.emp-salary-detail-grid .emp-salary-net {
-  grid-column: 1 / -1;
-  background: var(--primary-light, #dbeafe);
-  border-color: transparent;
+.emp-payslip-net {
+  background: #52642a;
+  color: #fff;
+  text-align: center;
+  border-left: 1px solid #555;
 }
 
-.emp-salary-net strong {
-  color: var(--primary-color, #00674f);
-  font-size: 1.1rem;
+.emp-payslip-net strong {
+  display: block;
+  margin-top: .35rem;
+  padding: .35rem;
+  background: #edf0df;
+  color: #2c3919;
+  font-size: 1.05rem;
 }
 
-.emp-salary-note {
-  margin: 1rem 0 0;
-  color: var(--muted-text, #6b7280);
-  font-size: .75rem;
-  line-height: 1.5;
+.emp-payslip-footer {
+  padding: .55rem;
+  border-top: 1px solid #777;
+  color: #6b7280;
+  font-size: .65rem;
+  text-align: center;
 }
 
-@media (max-width: 520px) {
-  .emp-salary-actions { width: 100%; }
+.emp-salary-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+@media (max-width: 650px) {
+  .emp-salary-actions { width: 100%; justify-content: stretch; }
   .emp-salary-btn { flex: 1; }
-  .emp-salary-detail-grid { grid-template-columns: 1fr; }
-  .emp-salary-detail-grid .emp-salary-net { grid-column: auto; }
+  .emp-payslip-top,
+  .emp-payslip-personal,
+  .emp-payslip-bottom { grid-template-columns: 1fr; }
+  .emp-payslip-brand,
+  .emp-payslip-confidential,
+  .emp-payslip-title,
+  .emp-payslip-personal-col + .emp-payslip-personal-col,
+  .emp-payslip-net { border-left: 0; }
+  .emp-payslip-title { border-top: 1px solid #555; border-bottom: 1px solid #555; }
+  .emp-payslip-head,
+  .emp-payslip-row,
+  .emp-payslip-total { grid-template-columns: 1.2fr .9fr .9fr; }
+  .emp-payslip-head > *,
+  .emp-payslip-row > *,
+  .emp-payslip-total > * { padding: .38rem; font-size: .65rem; }
 }
