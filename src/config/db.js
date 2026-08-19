@@ -4,11 +4,6 @@ import fs from "node:fs";
 
 dotenv.config();
 
-const sslOptions = {
-  ca: fs.readFileSync(new URL("./ca.pem", import.meta.url)),
-  rejectUnauthorized: true,
-};
-
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
@@ -16,7 +11,10 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 
-  ssl: sslOptions,
+  ssl: {
+    ca: fs.readFileSync(new URL("./ca.pem", import.meta.url)),
+    rejectUnauthorized: true,
+  },
 
   waitForConnections: true,
   connectionLimit: 10,
