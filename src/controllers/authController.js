@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import pool from "../config/db.js";
-import { findUserByLogin, findUserByEmail, createUser, getUserById, findEmployeeByEmail } from "../models/userModel.js";
+import { findUserByLogin, findUserByEmail, createUser, getUserById, findEmployeeByEmail, upsertEmployeeUser } from "../models/userModel.js";
 
 dotenv.config();
 
@@ -75,6 +75,41 @@ export async function login(req, res) {
   } catch (error) {
     console.error("Login failed:", error);
     res.status(500).json({ message: "Error during login", error: error.message });
+  }
+}
+
+export async function provisionEmployee(req, res) {
+  const { employeeId, password } = req.body || {};
+  const id = Number(employeeId);
+
+  if (!Number.isInteger(id) || id <= 0 || !password || password.length < 8) {
+    return res.status(400).json({ message: "Employee ID and a password of at least 8 characters are required" });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      "SELECT employee_id AS employeeId, contact FROM employees WHERE employee_id = ? LIMIT 1",
+      [id]
+    );
+    const employee = rows[0];
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+
+    const user = await upsertEmployeeUser({
+      employeeId: id,
+      email: employee.contact,
+      passwordHash: hashPassword(password),
+    });
+
+    return res.status(201).json({
+      message: "Employee login credentials saved",
+      user: publicUser(user),
+    });
+  } catch (error) {
+    console.error("Employee provisioning failed:", error);
+    return res.status(error.code === "ER_DUP_ENTRY" ? 409 : 500).json({
+      message: error.code === "ER_DUP_ENTRY" ? "Employee credentials conflict with another account" : "Error creating employee credentials",
+      error: error.message,
+    });
   }
 }
 
