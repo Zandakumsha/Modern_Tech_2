@@ -19,7 +19,8 @@ export async function listEvents(req, res) {
               title,
               TIME_FORMAT(event_time, '%H:%i') AS time,
               category,
-              description
+              description,
+              hr_username
          FROM calendar_events
         WHERE hr_username = ?
         ORDER BY event_date, event_time, event_id`,
@@ -38,7 +39,7 @@ export async function createEvent(req, res) {
     const hrUsername = authenticatedUsername(req);
     const { eventDate, title, time, category = "Work", description = "" } = req.body || {};
 
-    if (!hrUsername || !eventDate || !title || !time) {
+    if (!hrUsername || !eventDate || !String(title || "").trim() || !time) {
       return res.status(400).json({ error: "eventDate, title and time are required." });
     }
 
@@ -51,7 +52,7 @@ export async function createEvent(req, res) {
       `INSERT INTO calendar_events
          (hr_username, event_date, title, event_time, category, description)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [hrUsername, eventDate, title.trim(), time, category, String(description).trim()],
+      [hrUsername, eventDate, String(title).trim(), time, category, String(description || "").trim()],
     );
 
     const [rows] = await pool.query(
@@ -60,7 +61,8 @@ export async function createEvent(req, res) {
               title,
               TIME_FORMAT(event_time, '%H:%i') AS time,
               category,
-              description
+              description,
+              hr_username
          FROM calendar_events
         WHERE event_id = ? AND hr_username = ?`,
       [result.insertId, hrUsername],
@@ -78,7 +80,7 @@ export async function deleteEvent(req, res) {
     const eventId = Number(req.params.id);
     const hrUsername = authenticatedUsername(req);
 
-    if (!eventId || !hrUsername) {
+    if (!Number.isInteger(eventId) || eventId <= 0 || !hrUsername) {
       return res.status(400).json({ error: "A valid event id and authenticated HR user are required." });
     }
 
