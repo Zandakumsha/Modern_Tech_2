@@ -1,25 +1,17 @@
 import pool from "../config/db.js";
 
-async function resolveUserId({ userId, username }) {
-  if (userId) return Number(userId);
-  if (!username) return null;
-
-  const [rows] = await pool.query(
-    "SELECT user_id FROM users WHERE username = ? LIMIT 1",
-    [username],
-  );
-
-  return rows[0]?.user_id ?? null;
+function authenticatedUsername(req) {
+  const username = String(req.user?.username || "").trim();
+  return username || null;
 }
 
 export async function listEvents(req, res) {
   try {
-    const userId = await resolveUserId({
-      userId: req.query.userId,
-      username: req.query.username,
-    });
+    const hrUsername = authenticatedUsername(req);
 
-    if (!userId) return res.status(400).json({ error: "A valid userId or username is required." });
+    if (!hrUsername) {
+      return res.status(401).json({ error: "Authenticated HR username is required." });
+    }
 
     const [rows] = await pool.query(
       `SELECT event_id AS id,
@@ -29,9 +21,9 @@ export async function listEvents(req, res) {
               category,
               description
          FROM calendar_events
-        WHERE user_id = ?
+        WHERE hr_username = ?
         ORDER BY event_date, event_time, event_id`,
-      [userId],
+      [hrUsername],
     );
 
     return res.json(rows);
@@ -43,11 +35,11 @@ export async function listEvents(req, res) {
 
 export async function createEvent(req, res) {
   try {
-    const { userId, username, eventDate, title, time, category = "Work", description = "" } = req.body;
-    const resolvedUserId = await resolveUserId({ userId, username });
+    const hrUsername = authenticatedUsername(req);
+    const { eventDate, title, time, category = "Work", description = "" } = req.body || {};
 
-    if (!resolvedUserId || !eventDate || !title || !time) {
-      return res.status(400).json({ error: "userId/username, eventDate, title and time are required." });
+    if (!hrUsername || !eventDate || !title || !time) {
+      return res.status(400).json({ error: "eventDate, title and time are required." });
     }
 
     const allowedCategories = new Set(["Work", "Personal", "Urgent"]);
@@ -56,9 +48,10 @@ export async function createEvent(req, res) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO calendar_events (user_id, event_date, title, event_time, category, description)
+      `INSERT INTO calendar_events
+         (hr_username, event_date, title, event_time, category, description)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [resolvedUserId, eventDate, title.trim(), time, category, description.trim()],
+      [hrUsername, eventDate, title.trim(), time, category, String(description).trim()],
     );
 
     const [rows] = await pool.query(
@@ -69,8 +62,8 @@ export async function createEvent(req, res) {
               category,
               description
          FROM calendar_events
-        WHERE event_id = ?`,
-      [result.insertId],
+        WHERE event_id = ? AND hr_username = ?`,
+      [result.insertId, hrUsername],
     );
 
     return res.status(201).json(rows[0]);
@@ -83,19 +76,20 @@ export async function createEvent(req, res) {
 export async function deleteEvent(req, res) {
   try {
     const eventId = Number(req.params.id);
-    const { userId, username } = req.body;
-    const resolvedUserId = await resolveUserId({ userId, username });
+    const hrUsername = authenticatedUsername(req);
 
-    if (!eventId || !resolvedUserId) {
-      return res.status(400).json({ error: "A valid event id and user are required." });
+    if (!eventId || !hrUsername) {
+      return res.status(400).json({ error: "A valid event id and authenticated HR user are required." });
     }
 
     const [result] = await pool.query(
-      "DELETE FROM calendar_events WHERE event_id = ? AND user_id = ?",
-      [eventId, resolvedUserId],
+      "DELETE FROM calendar_events WHERE event_id = ? AND hr_username = ?",
+      [eventId, hrUsername],
     );
 
-    if (!result.affectedRows) return res.status(404).json({ error: "Event not found." });
+    if (!result.affectedRows) {
+      return res.status(404).json({ error: "Event not found." });
+    }
 
     return res.status(204).send();
   } catch (error) {
