@@ -119,25 +119,29 @@ export async function createLeaveRequest(req, res) {
   const { date, startDate, endDate, type, reason } = req.body || {};
   const requestReason = String(type || reason || "").trim();
   if (!employeeId || !requestReason) return res.status(400).json({ message: "employeeId and leave reason/type are required" });
-  if (!canAccessEmployee(req, employeeId)) return res.status(403).json({ message: "You can only submit leave for your own employee account" });
 
-  const dates = [];
-  if (date) {
-    if (!isValidDate(date)) return res.status(400).json({ message: "date must be YYYY-MM-DD" });
-    dates.push(date);
-  } else {
-    if (!isValidDate(startDate) || !isValidDate(endDate) || startDate > endDate) return res.status(400).json({ message: "Valid startDate and endDate are required" });
-    const current = new Date(`${startDate}T00:00:00Z`);
-    const last = new Date(`${endDate}T00:00:00Z`);
-    while (current <= last) {
-      dates.push(current.toISOString().slice(0, 10));
-      current.setUTCDate(current.getUTCDate() + 1);
-    }
-  }
-
+  // The employee is selected by the person submitting the request. A logged-in
+  // user does not have to be that employee. This allows an Admin/Manager (and,
+  // where the UI permits it, another authenticated user) to submit a leave
+  // request on behalf of a selected employee.
   try {
     const [employee] = await pool.query("SELECT employee_id FROM employees WHERE employee_id = ?", [employeeId]);
     if (!employee.length) return res.status(404).json({ message: "Employee not found" });
+
+    const dates = [];
+    if (date) {
+      if (!isValidDate(date)) return res.status(400).json({ message: "date must be YYYY-MM-DD" });
+      dates.push(date);
+    } else {
+      if (!isValidDate(startDate) || !isValidDate(endDate) || startDate > endDate) return res.status(400).json({ message: "Valid startDate and endDate are required" });
+      const current = new Date(`${startDate}T00:00:00Z`);
+      const last = new Date(`${endDate}T00:00:00Z`);
+      while (current <= last) {
+        dates.push(current.toISOString().slice(0, 10));
+        current.setUTCDate(current.getUTCDate() + 1);
+      }
+    }
+
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
