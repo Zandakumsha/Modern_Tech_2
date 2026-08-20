@@ -34,7 +34,6 @@ export async function listEvents(req, res) {
 
 export async function createEvent(req, res) {
   try {
-    const user = await resolveUserId(req);
     const { eventDate, event_date, title, time, event_time, category = "Work", description = "" } = req.body || {};
     const date = String(eventDate || event_date || "").trim();
     const eventTime = String(time || event_time || "").trim();
@@ -45,6 +44,7 @@ export async function createEvent(req, res) {
     if (!/^\d{2}:\d{2}$/.test(eventTime)) return res.status(400).json({ error: "A valid event time is required." });
     if (!new Set(["Work", "Personal", "Urgent"]).has(category)) return res.status(400).json({ error: "Invalid event category." });
 
+    const user = await resolveUserId(req);
     const [result] = await pool.query(
       `INSERT INTO calendar_events (user_id, hr_username, event_date, title, event_time, category, description)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
