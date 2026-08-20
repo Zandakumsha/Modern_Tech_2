@@ -1,7 +1,7 @@
 USE defaultdb;
 
 -- ModernTech HR Management System — schema
--- Tasks are standalone records and are not linked to users.
+-- Tasks and calendar events are standalone records.
 
 CREATE TABLE employees (
   employee_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,18 +96,13 @@ CREATE TABLE tasks (
 
 CREATE TABLE calendar_events (
   event_id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  hr_username VARCHAR(100),
   event_date DATE NOT NULL,
   title VARCHAR(200) NOT NULL,
-  event_time TIME,
+  event_time TIME NOT NULL,
   category ENUM('Work','Personal','Urgent') NOT NULL DEFAULT 'Work',
   description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-  INDEX idx_calendar_events_user_date (user_id, event_date),
-  INDEX idx_events_date (event_date),
-  INDEX idx_events_hr_username (hr_username)
+  INDEX idx_events_date (event_date)
 ) ENGINE=InnoDB;
 
 CREATE TABLE company_settings (
