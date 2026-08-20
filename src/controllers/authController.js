@@ -8,6 +8,14 @@ dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "2h";
 
+function getHrCredentials() {
+  return {
+    email: String(process.env.HR_EMAIL || "").trim().toLowerCase(),
+    username: String(process.env.HR_USERNAME || "").trim(),
+    password: String(process.env.HR_PASSWORD || "")
+  };
+}
+
 function safeEqual(left, right) {
   const a = Buffer.from(String(left));
   const b = Buffer.from(String(right));
@@ -16,22 +24,6 @@ function safeEqual(left, right) {
 
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
   return `${salt}:${crypto.scryptSync(password, salt, 64).toString("hex")}`;
-}
-
-function verifyPassword(password, storedHash) {
-  if (!storedHash || typeof storedHash !== "string") return false;
-  const separator = storedHash.indexOf(":");
-  if (separator <= 0) return false;
-  const salt = storedHash.slice(0, separator);
-  const expectedHex = storedHash.slice(separator + 1);
-  if (!salt || !expectedHex) return false;
-  try {
-    const actual = crypto.scryptSync(String(password), salt, 64);
-    const expected = Buffer.from(expectedHex, "hex");
-    return expected.length === actual.length && crypto.timingSafeEqual(actual, expected);
-  } catch {
-    return false;
-  }
 }
 
 function publicUser(user) {
@@ -51,15 +43,17 @@ function validateIdentifier(value) {
   return null;
 }
 
-async function loginWithHrDatabase(identifier, password) {
-  const dbUser = await findUserByLogin(identifier);
-  if (!dbUser || !["Admin", "Manager"].includes(dbUser.role)) {
-    throw Object.assign(new Error("Invalid HR username/email or password"), { statusCode: 401, code: "INVALID_HR_CREDENTIALS" });
-  }
-  if (!verifyPassword(password, dbUser.passwordHash)) {
-    throw Object.assign(new Error("Invalid HR username/email or password"), { statusCode: 401, code: "INVALID_HR_CREDENTIALS" });
-  }
-  return { user: dbUser, token: createToken(dbUser, { authSource: "database", hrAuthenticated: true }) };
+async function loginWithHrEnv(identifier, password) {
+  const { email, username, password: configuredPassword } = getHrCredentials();
+  if ((!email && !username) || !configuredPassword) throw Object.assign(new Error("HR authentication is not configured on the server"), { statusCode: 503, code: "HR_AUTH_NOT_CONFIGURED" });
+  const identifierMatches = (email && safeEqual(identifier.toLowerCase(), email)) || (username && safeEqual(identifier, username));
+  if (!identifierMatches || !safeEqual(password, configuredPassword)) throw Object.assign(new Error("Invalid HR username/email or password"), { statusCode: 401, code: "INVALID_HR_CREDENTIALS" });
+  let dbUser = null;
+  if (email) dbUser = await findUserByEmail(email);
+  if (!dbUser && username) dbUser = await findUserByLogin(username);
+  const role = dbUser?.role === "Admin" ? "Admin" : "Manager";
+  const user = dbUser || { userId: null, employeeId: null, username: username || email, email: email || null, role, avatarUrl: null };
+  return { user, token: createToken(user, { authSource: "env", hrAuthenticated: true }) };
 }
 
 export async function register(req, res) {
@@ -86,7 +80,7 @@ export async function login(req, res) {
       const secret = String(password || "");
       if (!identifier || !secret) return res.status(400).json({ message: "HR username/email and password are required" });
       if (identifier.length > 254) return res.status(400).json({ message: "HR username/email is too long" });
-      const result = await loginWithHrDatabase(identifier, secret);
+      const result = await loginWithHrEnv(identifier, secret);
       return res.json({ message: "HR login successful", token: result.token, user: publicUser(result.user) });
     }
 
@@ -108,7 +102,7 @@ export async function login(req, res) {
     const status = Number.isInteger(error.statusCode) ? error.statusCode : 500;
     if (status >= 500) console.error("Login failed:", error);
     else console.warn("Login rejected:", error.code || error.message);
-    return res.status(status).json({ message: error.message || "Authentication failed" });
+    return res.status(status).json({ message: status === 503 ? "HR authentication is unavailable. Contact the system administrator." : error.message || "Authentication failed" });
   }
 }
 
