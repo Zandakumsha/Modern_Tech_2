@@ -1,6 +1,4 @@
-// =========================
-// Calendar Functionality
-// =========================
+const API_URL = "/api/calendar";
 
 const calendar = document.getElementById("calendar");
 const miniCalendar = document.getElementById("miniCalendar");
@@ -8,78 +6,204 @@ const monthTitle = document.getElementById("monthTitle");
 const headerMonth = document.getElementById("headerMonth");
 const eventsList = document.getElementById("eventsList");
 const selectedDateTitle = document.getElementById("selectedDateTitle");
-const selectedDateInput = document.getElementById("selectedDate");
 const eventForm = document.getElementById("eventForm");
+const eventTitleInput = document.getElementById("eventTitle");
+const eventTimeInput = document.getElementById("eventTime");
+const eventCategoryInput = document.getElementById("eventCategory");
+const eventDescriptionInput = document.getElementById("eventDescription");
 
-if (
-  calendar &&
-  miniCalendar &&
-  monthTitle &&
-  headerMonth &&
-  eventsList &&
-  selectedDateTitle &&
-  selectedDateInput &&
-  eventForm
-) {
+if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selectedDateTitle && eventForm) {
   let current = new Date();
   let selectedDateKey = "";
   let selectedDay = null;
+  let events = {};
+  let loading = false;
 
-  let events = JSON.parse(localStorage.getItem("calendarEvents")) || {};
+  const key = (year, month, day) => `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-  function saveEvents() {
-    localStorage.setItem("calendarEvents", JSON.stringify(events));
+  function getLoggedInUsername() {
+    const candidates = [
+      localStorage.getItem("username"),
+      localStorage.getItem("hr_username"),
+      localStorage.getItem("user"),
+      localStorage.getItem("currentUser"),
+      sessionStorage.getItem("username"),
+      sessionStorage.getItem("hr_username"),
+      sessionStorage.getItem("user"),
+      sessionStorage.getItem("currentUser")
+    ];
+
+    for (const value of candidates) {
+      if (!value) continue;
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.username) return String(parsed.username).trim();
+          if (parsed.user?.username) return String(parsed.user.username).trim();
+        }
+      } catch {
+        if (String(value).trim()) return String(value).trim();
+      }
+    }
+
+    return "";
   }
 
-  function getDateKey(year, month, day) {
-    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  function showFormMessage(message, type = "error") {
+    let el = document.getElementById("eventFormMessage");
+    if (!el) {
+      el = document.createElement("p");
+      el.id = "eventFormMessage";
+      el.setAttribute("role", "status");
+      eventForm.appendChild(el);
+    }
+    el.textContent = message;
+    el.style.color = type === "success" ? "green" : "red";
   }
 
-  function getEventColor(category) {
-    switch (category) {
-      case "Work":
-        return "#9b4dff";
-      case "Personal":
-        return "#2ecc71";
-      case "Urgent":
-        return "#ff4d6d";
-      default:
-        return "#4ea7ff";
+  async function parseResponse(response) {
+    const text = await response.text();
+    let data = null;
+
+    if (text.trim()) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(`Server returned invalid JSON (${response.status}).`);
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.message || data?.error || `Calendar request failed (${response.status}).`);
+    }
+
+    return data;
+  }
+
+  function normaliseEvent(event) {
+    return {
+      id: event.id ?? event.event_id,
+      eventDate: String(event.eventDate ?? event.event_date ?? "").slice(0, 10),
+      title: event.title ?? event.event_title ?? "Untitled event",
+      time: event.time ?? event.event_time ?? "",
+      category: event.category ?? "General",
+      description: event.description ?? "",
+      hr_username: event.hr_username ?? ""
+    };
+  }
+
+  function groupEvents(apiEvents) {
+    const grouped = {};
+    for (const rawEvent of apiEvents) {
+      const event = normaliseEvent(rawEvent);
+      if (!event.eventDate) continue;
+      (grouped[event.eventDate] ||= []).push(event);
+    }
+    return grouped;
+  }
+
+  async function loadEvents() {
+    if (loading) return;
+    loading = true;
+
+    try {
+      // Calendar deliberately does NOT use a JWT/token.
+      const response = await fetch(API_URL, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        credentials: "same-origin"
+      });
+
+      const data = await parseResponse(response);
+      const apiEvents = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.events)
+          ? data.events
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+
+      events = groupEvents(apiEvents);
+      renderCalendar();
+      showEvents(selectedDateKey);
+    } catch (error) {
+      console.error("Failed to load calendar events:", error);
+      events = {};
+      renderCalendar();
+      eventsList.innerHTML = `<p>Unable to load calendar events. ${escapeHtml(error.message)}</p>`;
+    } finally {
+      loading = false;
     }
   }
 
-  // Adds the events directly underneath the date number inside each calendar cell.
-  function renderDayEvents(dayDiv, dateKey) {
-    const dayEvents = events[dateKey] || [];
+  async function createEvent(eventData) {
+    const hrUsername = getLoggedInUsername();
+    if (!hrUsername) {
+      throw new Error("The logged-in HR username could not be found. Please log in again.");
+    }
 
-    if (dayEvents.length === 0) return;
-
-    const eventContainer = document.createElement("div");
-    eventContainer.className = "calendar-day-events";
-
-    dayEvents.forEach((event) => {
-      const eventItem = document.createElement("div");
-      eventItem.className = "calendar-day-event";
-      eventItem.style.borderLeft = `3px solid ${getEventColor(event.category)}`;
-      eventItem.title = `${event.title}${event.time ? ` - ${event.time}` : ""}`;
-
-      const title = document.createElement("span");
-      title.className = "calendar-day-event-title";
-      title.textContent = event.title;
-
-      eventItem.appendChild(title);
-
-      if (event.time) {
-        const time = document.createElement("span");
-        time.className = "calendar-day-event-time";
-        time.textContent = event.time;
-        eventItem.appendChild(time);
-      }
-
-      eventContainer.appendChild(eventItem);
+    // No Authorization header and no token is used for calendar requests.
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        event_date: eventData.eventDate,
+        title: eventData.title,
+        event_time: eventData.time,
+        category: eventData.category || "General",
+        description: eventData.description || "",
+        hr_username: hrUsername
+      })
     });
 
-    dayDiv.appendChild(eventContainer);
+    const data = await parseResponse(response);
+    return data?.event ?? data?.data ?? data;
+  }
+
+  async function deleteEvent(eventId) {
+    if (eventId === undefined || eventId === null || eventId === "") {
+      throw new Error("This event does not have a valid database ID.");
+    }
+
+    // No Authorization header and no token is used here either.
+    const response = await fetch(`${API_URL}/${encodeURIComponent(eventId)}`, {
+      method: "DELETE",
+      headers: { Accept: "application/json" },
+      credentials: "same-origin"
+    });
+
+    return parseResponse(response);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderDayEvents(dayDiv, dateKey) {
+    const dayEvents = events[dateKey] || [];
+    if (!dayEvents.length) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "calendar-day-events";
+
+    dayEvents.forEach(event => {
+      const item = document.createElement("div");
+      item.className = "calendar-day-event";
+      item.title = `${event.title}${event.time ? ` - ${event.time}` : ""}`;
+      item.textContent = event.time ? `${event.time} ${event.title}` : event.title;
+      wrap.appendChild(item);
+    });
+
+    dayDiv.appendChild(wrap);
   }
 
   function renderCalendar() {
@@ -88,41 +212,31 @@ if (
 
     const year = current.getFullYear();
     const month = current.getMonth();
-
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
-    const startDay = firstDay.getDay();
-    const totalDays = lastDay.getDate();
+    const first = new Date(year, month, 1);
+    const total = new Date(year, month + 1, 0).getDate();
+    const start = first.getDay();
 
     monthTitle.textContent = current.toLocaleString("default", {
       month: "long",
-      year: "numeric",
+      year: "numeric"
     });
+    headerMonth.textContent = monthTitle.textContent;
 
-    headerMonth.textContent = current.toLocaleString("default", {
-      month: "long",
-      year: "numeric",
-    });
-
-    ["S", "M", "T", "W", "T", "F", "S"].forEach((day) => {
+    ["S", "M", "T", "W", "T", "F", "S"].forEach(dayName => {
       const div = document.createElement("div");
-      div.textContent = day;
-      div.style.fontWeight = "600";
+      div.textContent = dayName;
       miniCalendar.appendChild(div);
     });
 
-    for (let i = 0; i < startDay; i++) {
+    for (let i = 0; i < start; i++) {
       calendar.appendChild(document.createElement("div"));
       miniCalendar.appendChild(document.createElement("div"));
     }
 
     const today = new Date();
 
-    for (let day = 1; day <= totalDays; day++) {
-      const dateKey = getDateKey(year, month + 1, day);
-
-      // ========= MAIN CALENDAR =========
+    for (let day = 1; day <= total; day++) {
+      const dateKey = key(year, month + 1, day);
       const dayDiv = document.createElement("div");
       dayDiv.className = "day";
 
@@ -134,209 +248,162 @@ if (
         dayDiv.classList.add("today");
       }
 
-      if (selectedDateKey === dateKey) {
-        dayDiv.classList.add("selected");
-      }
+      if (selectedDateKey === dateKey) dayDiv.classList.add("selected");
 
-      const dayNumber = document.createElement("div");
-      dayNumber.className = "day-number";
-      dayNumber.textContent = day;
-      dayDiv.appendChild(dayNumber);
+      const number = document.createElement("div");
+      number.className = "day-number";
+      number.textContent = day;
+      dayDiv.appendChild(number);
 
-      // Keep the event indicator for quick visual identification.
-      if (events[dateKey] && events[dateKey].length > 0) {
+      if (events[dateKey]?.length) {
         const dot = document.createElement("div");
         dot.className = "dot";
-        dot.style.background = getEventColor(events[dateKey][0].category);
         dayDiv.appendChild(dot);
-
-        // Show the actual event(s) underneath the date number.
         renderDayEvents(dayDiv, dateKey);
       }
 
       dayDiv.addEventListener("click", () => selectDate(day));
       calendar.appendChild(dayDiv);
 
-      // ========= MINI CALENDAR =========
-      const miniDay = document.createElement("div");
-      miniDay.textContent = day;
-
-      if (
-        day === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear()
-      ) {
-        miniDay.classList.add("today");
-      }
-
-      if (selectedDateKey === dateKey) {
-        miniDay.classList.add("selected");
-      }
-
-      miniDay.addEventListener("click", () => selectDate(day));
-      miniCalendar.appendChild(miniDay);
+      const mini = document.createElement("div");
+      mini.textContent = day;
+      if (selectedDateKey === dateKey) mini.classList.add("selected");
+      mini.addEventListener("click", () => selectDate(day));
+      miniCalendar.appendChild(mini);
     }
   }
 
   function selectDate(day) {
     selectedDay = day;
+    selectedDateKey = key(current.getFullYear(), current.getMonth() + 1, day);
 
-    const year = current.getFullYear();
-    const month = current.getMonth() + 1;
-
-    selectedDateKey = getDateKey(year, month, day);
-
-    const date = new Date(year, month - 1, day);
-
-    selectedDateInput.value = date.toDateString();
+    const date = new Date(current.getFullYear(), current.getMonth(), day);
     selectedDateTitle.textContent = date.toDateString();
 
     renderCalendar();
     showEvents(selectedDateKey);
   }
 
-  function showEvents(key) {
+  function showEvents(dateKey) {
     eventsList.innerHTML = "";
+    const dayEvents = events[dateKey] || [];
 
-    if (!events[key] || events[key].length === 0) {
+    if (!dayEvents.length) {
       eventsList.innerHTML = "<p>No events scheduled for this day.</p>";
       return;
     }
 
-    events[key].forEach((event, index) => {
+    dayEvents.forEach(event => {
       const div = document.createElement("div");
       div.className = "event";
-      div.style.borderLeft = `5px solid ${getEventColor(event.category)}`;
 
       const title = document.createElement("h4");
       title.textContent = event.title;
 
       const time = document.createElement("p");
       time.innerHTML = "<strong>Time:</strong> ";
-      time.appendChild(document.createTextNode(event.time || "Not specified"));
+      time.append(document.createTextNode(event.time || "Not specified"));
 
       const category = document.createElement("p");
       category.innerHTML = "<strong>Category:</strong> ";
-      category.appendChild(document.createTextNode(event.category || "General"));
+      category.append(document.createTextNode(event.category || "General"));
 
       const description = document.createElement("p");
       description.textContent = event.description || "";
 
-      const deleteButton = document.createElement("button");
-      deleteButton.className = "delete-event";
-      deleteButton.textContent = "Delete";
+      const del = document.createElement("button");
+      del.type = "button";
+      del.textContent = "Delete";
 
-      deleteButton.addEventListener("click", () => {
-        events[key].splice(index, 1);
+      del.addEventListener("click", async () => {
+        if (!confirm(`Delete "${event.title}"?`)) return;
 
-        if (events[key].length === 0) {
-          delete events[key];
+        del.disabled = true;
+        del.textContent = "Deleting...";
+
+        try {
+          await deleteEvent(event.id);
+          showFormMessage("Event deleted successfully.", "success");
+          await loadEvents();
+        } catch (error) {
+          console.error("Failed to delete calendar event:", error);
+          showFormMessage(error.message);
+          del.disabled = false;
+          del.textContent = "Delete";
         }
-
-        saveEvents();
-        renderCalendar();
-        showEvents(key);
       });
 
-      div.append(title, time, category, description, deleteButton);
+      div.append(title, time, category, description, del);
       eventsList.appendChild(div);
     });
   }
 
-  // ===================
-  // Add Event
-  // ===================
-  eventForm.addEventListener("submit", (e) => {
+  eventForm.addEventListener("submit", async e => {
     e.preventDefault();
 
+    if (!eventForm.reportValidity()) return;
+
     if (!selectedDateKey) {
-      alert("Please select a date first.");
+      showFormMessage("Please select a date on the calendar first.");
       return;
     }
 
-    const title = document.getElementById("eventTitle").value.trim();
-    const time = document.getElementById("eventTime").value;
-    const category = document.getElementById("eventCategory").value;
-    const description = document
-      .getElementById("eventDescription")
-      .value.trim();
+    const title = eventTitleInput.value.trim();
+    const time = eventTimeInput.value;
+    const category = eventCategoryInput.value;
+    const description = eventDescriptionInput.value.trim();
 
-    if (!title) {
-      alert("Please enter an event title.");
+    if (!title || !time) {
+      showFormMessage("Please enter an event title and time.");
       return;
     }
 
-    if (!events[selectedDateKey]) {
-      events[selectedDateKey] = [];
+    const submitButton = eventForm.querySelector('button[type="submit"]');
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.dataset.originalText = submitButton.textContent;
+      submitButton.textContent = "Saving...";
     }
 
-    events[selectedDateKey].push({
-      title,
-      time,
-      category,
-      description,
-    });
+    try {
+      await createEvent({
+        eventDate: selectedDateKey,
+        title,
+        time,
+        category,
+        description
+      });
 
-    saveEvents();
-
-    // Re-render immediately so the new event appears under its date.
-    renderCalendar();
-    showEvents(selectedDateKey);
-
-    eventForm.reset();
-
-    selectedDateInput.value = new Date(
-      current.getFullYear(),
-      current.getMonth(),
-      selectedDay,
-    ).toDateString();
+      eventForm.reset();
+      showFormMessage("Event added successfully.", "success");
+      await loadEvents();
+    } catch (error) {
+      console.error("Failed to create calendar event:", error);
+      showFormMessage(error.message);
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = submitButton.dataset.originalText || "Add Event";
+      }
+    }
   });
 
-  // ===================
-  // Previous Month
-  // ===================
-  document.getElementById("prevMonth").addEventListener("click", () => {
+  document.getElementById("prevMonth")?.addEventListener("click", () => {
     current.setMonth(current.getMonth() - 1);
+    const max = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
     renderCalendar();
-
-    if (selectedDay) {
-      selectDate(
-        Math.min(
-          selectedDay,
-          new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate(),
-        ),
-      );
-    }
+    selectDate(Math.min(selectedDay || 1, max));
   });
 
-  // ===================
-  // Next Month
-  // ===================
-  document.getElementById("nextMonth").addEventListener("click", () => {
+  document.getElementById("nextMonth")?.addEventListener("click", () => {
     current.setMonth(current.getMonth() + 1);
+    const max = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
     renderCalendar();
-
-    if (selectedDay) {
-      selectDate(
-        Math.min(
-          selectedDay,
-          new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate(),
-        ),
-      );
-    }
+    selectDate(Math.min(selectedDay || 1, max));
   });
-
-  // ===================
-  // Initial Load
-  // ===================
-  renderCalendar();
 
   const today = new Date();
-
-  if (
-    today.getMonth() === current.getMonth() &&
-    today.getFullYear() === current.getFullYear()
-  ) {
-    selectDate(today.getDate());
-  }
+  selectDate(today.getDate());
+  loadEvents();
 }

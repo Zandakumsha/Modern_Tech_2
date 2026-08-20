@@ -1,0 +1,6 @@
+/* Shared button visibility safeguards */
+button,.btn,[type="button"],[type="submit"],[role="button"]{visibility:visible!important;opacity:1!important;pointer-events:auto;max-width:100%}
+button:not(.sidebar__link),.btn,[type="button"],[type="submit"]{min-height:36px}
+.notification-actions,.emp-page-header-actions,.emp-form-actions,.modal-actions,.leave-preview-actions,.emp-leave-modal-actions{display:flex!important;flex-wrap:wrap;gap:8px;align-items:center}
+.notification-view,.notification-remove,.modal-btn,.leave-preview-btn,.emp-leave-view,.emp-add-btn,.emp-header-action,.emp-msg-btn{display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap}
+@media(max-width:700px){.notification-actions{width:100%}.notification-view{flex:1}.notification-remove{flex:0 0 36px}.emp-page-header-actions{width:100%}.emp-page-header-actions button{flex:1 1 160px}}

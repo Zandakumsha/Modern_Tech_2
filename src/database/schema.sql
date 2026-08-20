@@ -135,18 +135,18 @@ CREATE TABLE tasks (
 -- 9. calendar_events — company calendar (calendar.html)
 --    currently stored in localStorage's `calendarEvents` object
 -- ============================================
+
 CREATE TABLE calendar_events (
   event_id     INT AUTO_INCREMENT PRIMARY KEY,
-  user_id      INT NOT NULL,
+  hr_username  VARCHAR(50) NOT NULL,
   event_date   DATE NOT NULL,
   title        VARCHAR(200) NOT NULL,
   event_time   TIME,
   category     ENUM('Work','Personal','Urgent') NOT NULL DEFAULT 'Work',
   description  TEXT,
   created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   INDEX idx_events_date (event_date),
-  INDEX idx_events_user (user_id)
+  INDEX idx_events_hr_username (hr_username)
 ) ENGINE=InnoDB;
 
 -- ============================================
