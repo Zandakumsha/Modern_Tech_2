@@ -67,6 +67,8 @@ function ensureNotificationsNavigation() {
 
 /*=============== STANDARD ATTENDANCE FOOTER ===============*/
 function ensureNotificationsFooter() {
+  // The login page intentionally has no footer.
+  if (document.body.classList.contains("login-page") || window.location.pathname.endsWith("/login.html")) return;
   let footer = document.querySelector("footer");
   if (!footer) { footer = document.createElement("footer"); document.body.appendChild(footer); }
   footer.innerHTML = `
