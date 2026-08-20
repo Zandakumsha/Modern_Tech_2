@@ -11,7 +11,6 @@
   const hrMessage = document.getElementById("login-message");
   const employeeForm = document.getElementById("employee-auth-form");
   const employeeIdInput = document.getElementById("login-employee-id");
-  const employeePasswordInput = document.getElementById("login-employee-password");
   const employeeSubmit = document.getElementById("employee-submit");
   const employeeMessage = document.getElementById("employee-message");
   if (!loginContainer || !signUpBtn || !signInBtn || !hrForm || !employeeForm) return;
@@ -41,13 +40,13 @@
   signUpBtn.addEventListener("click", () => { loginContainer.classList.add("login_sign-up-mode"); employeeMessage.textContent = ""; });
   signInBtn.addEventListener("click", () => { loginContainer.classList.remove("login_sign-up-mode"); hrMessage.textContent = ""; });
 
-  async function requestLogin(username, password, loginType) {
+  async function requestLogin(body) {
     let response;
     try {
       response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ username, password, loginType }),
+        body: JSON.stringify(body),
       });
     } catch {
       throw new Error("Unable to reach the authentication server. Make sure the backend is running.");
@@ -67,7 +66,7 @@
     hrSubmit.disabled = true;
     showMessage(hrMessage, "Authenticating HR credentials...", true);
     try {
-      const data = await requestLogin(username, password, "hr");
+      const data = await requestLogin({ username, password, loginType: "hr" });
       if (!["Admin", "Manager"].includes(data.user?.role)) throw new Error("This account is not authorised for HR access.");
       saveAuthenticatedUser(data);
       window.location.href = "index.html";
@@ -81,12 +80,13 @@
   employeeForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const employeeId = employeeIdInput.value.trim();
-    const password = employeePasswordInput.value;
-    if (!employeeId || !password) return showMessage(employeeMessage, "Enter your Employee ID and password.");
+    if (!employeeId) return showMessage(employeeMessage, "Enter your Employee ID.");
+    if (!/^\d+$/.test(employeeId)) return showMessage(employeeMessage, "Employee ID must contain numbers only.");
+
     employeeSubmit.disabled = true;
-    showMessage(employeeMessage, "Signing in...", true);
+    showMessage(employeeMessage, "Verifying Employee ID...", true);
     try {
-      const data = await requestLogin(employeeId, password, "employee");
+      const data = await requestLogin({ username: employeeId, loginType: "employee" });
       if (data.user?.role !== "Staff") throw new Error("This account is not an employee account.");
       if (String(data.user?.employeeId) !== employeeId) throw new Error("The Employee ID does not match this account.");
       saveAuthenticatedUser(data);
@@ -95,6 +95,6 @@
       clearAuthentication();
       console.error("Employee login error:", error);
       showMessage(employeeMessage, error.message || "Employee authentication failed.");
-    } finally { employeeSubmit.disabled = false; employeePasswordInput.value = ""; }
+    } finally { employeeSubmit.disabled = false; }
   });
 })();
