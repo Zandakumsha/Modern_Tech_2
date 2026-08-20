@@ -1,11 +1,10 @@
-import { Router } from "express";
-import { createEvent, deleteEvent, listEvents } from "../controllers/calendarController.js";
+import express from "express";
+import auth from "../middleware/auth.js";
+import { createEvent, deleteEvent, listEvents } from "../../controllers/calendarController.js";
 
-const router = Router();
-
-// Calendar uses MySQL directly and deliberately does not require JWT/token authentication.
+const router = express.Router();
+router.use(auth);
 router.get("/", listEvents);
 router.post("/", createEvent);
 router.delete("/:id", deleteEvent);
-
 export default router;
