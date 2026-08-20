@@ -1,134 +1,32 @@
 /* ══════════════════════════════════════════════════
-   PERFORMANCE REVIEWS
-   Reuses the shared EMPLOYEES / loadData / avatarColor /
-   initials / stampClass / statusIcon / showToast helpers
-   defined in attendance-common.js.
-   ══════════════════════════════════════════════════ */
+PERFORMANCE REVIEWS
+Reuses the shared EMPLOYEES / loadData / avatarColor /
+initials / stampClass / statusIcon / showToast helpers
+defined in attendance-common.js.
+══════════════════════════════════════════════════ */
 
 let REVIEWS = [];
 let selectedReviewId = null;
 let reviewFilterStatus = "all";
 let pendingScore = 0;
 
-const SEED_REVIEWS = [
-  {
-    id: 1,
-    employeeId: 1,
-    cycle: "Q2 2026",
-    status: "Completed",
-    score: 4.2,
-    manager: "D. Williams",
-    comments:
-      "Excellent analytical thinking. Consistently delivers high-quality reports ahead of deadlines.",
-    strengths: ["Data Analysis", "Communication"],
-    growth: ["Leadership", "Stakeholder Management"],
-  },
-  {
-    id: 2,
-    employeeId: 2,
-    cycle: "Q2 2026",
-    status: "Completed",
-    score: 3.8,
-    manager: "D. Williams",
-    comments:
-      "Good team player, needs to improve on time management and proactive communication.",
-    strengths: ["Teamwork", "Adaptability"],
-    growth: ["Time Management", "Initiative"],
-  },
-  {
-    id: 3,
-    employeeId: 3,
-    cycle: "Q2 2026",
-    status: "Completed",
-    score: 4.5,
-    manager: "T. Khumalo",
-    comments:
-      "Outstanding performance this quarter. Shows great initiative and technical depth.",
-    strengths: ["Technical Skills", "Problem Solving", "Initiative"],
-    growth: ["Presentation Skills"],
-  },
-  {
-    id: 4,
-    employeeId: 4,
-    cycle: "Q2 2026",
-    status: "In Progress",
-    score: 3.5,
-    manager: "T. Khumalo",
-    comments: "Review in progress — awaiting final scoring.",
-    strengths: ["Reliability"],
-    growth: ["Communication", "Leadership"],
-  },
-  {
-    id: 5,
-    employeeId: 5,
-    cycle: "Q2 2026",
-    status: "Completed",
-    score: 4.7,
-    manager: "A. Botha",
-    comments:
-      "Exceptional quarter. Zanele exceeded every target and mentored two junior staff members.",
-    strengths: ["Leadership", "Mentoring", "Results-driven"],
-    growth: ["Delegation"],
-  },
-  {
-    id: 6,
-    employeeId: 6,
-    cycle: "Q2 2026",
-    status: "Pending",
-    score: null,
-    manager: "A. Botha",
-    comments: "",
-    strengths: [],
-    growth: [],
-  },
-  {
-    id: 7,
-    employeeId: 7,
-    cycle: "Q2 2026",
-    status: "Completed",
-    score: 4.0,
-    manager: "D. Williams",
-    comments:
-      "Solid contributor. Reliable and consistent across all tasks assigned this quarter.",
-    strengths: ["Consistency", "Attention to Detail"],
-    growth: ["Strategic Thinking", "Networking"],
-  },
-  {
-    id: 8,
-    employeeId: 8,
-    cycle: "Q2 2026",
-    status: "In Progress",
-    score: 3.9,
-    manager: "A. Botha",
-    comments:
-      "Good progress but review still being finalised with department head.",
-    strengths: ["Communication", "Creativity"],
-    growth: ["Deadlines", "Prioritisation"],
-  },
-  {
-    id: 9,
-    employeeId: 9,
-    cycle: "Q2 2026",
-    status: "Pending",
-    score: null,
-    manager: "T. Khumalo",
-    comments: "",
-    strengths: [],
-    growth: [],
-  },
-  {
-    id: 10,
-    employeeId: 10,
-    cycle: "Q2 2026",
-    status: "Completed",
-    score: 4.1,
-    manager: "D. Williams",
-    comments:
-      "Very good quarter. Fatima handled a difficult project exceptionally well under pressure.",
-    strengths: ["Resilience", "Project Management"],
-    growth: ["Public Speaking", "Conflict Resolution"],
-  },
-];
+/* ── HTML escaping helper (prevents XSS from stored review data) ── */
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+async function loadReviewsFromApi() {
+  try {
+    const response = await fetch("/api/reviews");
+    REVIEWS = await response.json();
+    renderReviewHeader();
+    renderReviewList();
+  } catch (err) {
+    console.error("Failed to load reviews:", err);
+  }
+}
 
 function starsHtml(score, large = false) {
   if (score === null)
@@ -158,46 +56,46 @@ function populateReviewEmployeeDropdown() {
 function renderReviewHeader() {
   const scored = REVIEWS.filter((r) => r.score !== null);
   const avg = scored.length
-    ? (scored.reduce((s, r) => s + r.score, 0) / scored.length).toFixed(1)
-    : "—";
+  ? (scored.reduce((s, r) => s + r.score, 0) / scored.length).toFixed(1)
+  : "—";
   document.getElementById("avgScore").textContent = avg;
   document.getElementById("reviewCount").textContent =
-    `${REVIEWS.length} reviews`;
+  `${REVIEWS.length} reviews`;
 }
 
 function renderReviewList() {
   const filtered =
-    reviewFilterStatus === "all"
-      ? REVIEWS
-      : REVIEWS.filter(
-          (r) =>
-            r.status.toLowerCase().replace(/\s+/g, "-") === reviewFilterStatus,
-        );
-
+  reviewFilterStatus === "all"
+  ? REVIEWS
+  : REVIEWS.filter(
+    (r) =>
+      r.status.toLowerCase().replace(/\s+/g, "-") === reviewFilterStatus,
+  );
+  
   const el = document.getElementById("reviewList");
   el.innerHTML = filtered
-    .map((r) => {
-      const emp = EMPLOYEES.find((e) => e.employeeId === r.employeeId) || {
-        name: "Unknown",
-      };
-      const color = avatarColor(emp.name);
-      const sel = r.id === selectedReviewId ? " s_selected" : "";
-      return `
+  .map((r) => {
+    const emp = EMPLOYEES.find((e) => e.employeeId === r.employeeId) || {
+      name: "Unknown",
+    };
+    const color = avatarColor(emp.name);
+    const sel = r.id === selectedReviewId ? " s_selected" : "";
+    return `
       <div class="s_review_card${sel}" data-id="${r.id}">
-        <div class="s_avatar" style="background:${color}">${initials(emp.name)}</div>
+        <div class="s_avatar" style="background:${color}">${escapeHtml(initials(emp.name))}</div>
         <div class="s_review_card_body">
-          <div class="s_review_card_name">${emp.name}</div>
-          <div class="s_review_card_cycle">${r.cycle}</div>
+          <div class="s_review_card_name">${escapeHtml(emp.name)}</div>
+          <div class="s_review_card_cycle">${escapeHtml(r.cycle)}</div>
           <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
             <div class="s_review_card_stars">${starsHtml(r.score)}</div>
-            ${r.score !== null ? `<span class="s_review_card_score">${r.score}</span>` : ""}
+            ${r.score !== null ? `<span class="s_review_card_score">${escapeHtml(String(r.score))}</span>` : ""}
           </div>
         </div>
-        <span class="s_stamp s_notilt ${stampClass(r.status)}"><i class="${statusIcon(r.status)}"></i>${r.status}</span>
+        <span class="s_stamp s_notilt ${stampClass(r.status)}"><i class="${statusIcon(r.status)}"></i>${escapeHtml(r.status)}</span>
       </div>`;
-    })
-    .join("");
-
+  })
+  .join("");
+  
   el.querySelectorAll(".s_review_card").forEach((card) => {
     card.addEventListener("click", () => {
       selectedReviewId = Number(card.dataset.id);
@@ -219,69 +117,69 @@ function renderReviewDetail() {
   }
   empty.classList.add("s_hidden");
   content.classList.remove("s_hidden");
-
+  
   const emp = EMPLOYEES.find((e) => e.employeeId === rev.employeeId) || {
     name: "Unknown",
   };
   const color = avatarColor(emp.name);
   const pct = rev.score ? ((rev.score / 5) * 100).toFixed(0) : 0;
-
+  
   content.innerHTML = `
     <div class="s_detail_hd">
       <div style="display:flex;align-items:center;gap:12px">
-        <div class="s_avatar s_avatar_lg" style="background:${color}">${initials(emp.name)}</div>
+        <div class="s_avatar s_avatar_lg" style="background:${color}">${escapeHtml(initials(emp.name))}</div>
         <div>
-          <h3 class="s_detail_name">${emp.name}</h3>
-          <div class="s_detail_manager">Manager: ${rev.manager || "—"}</div>
+          <h3 class="s_detail_name">${escapeHtml(emp.name)}</h3>
+          <div class="s_detail_manager">Manager: ${rev.manager ? escapeHtml(rev.manager) : "—"}</div>
         </div>
       </div>
-      <span class="s_stamp s_notilt ${stampClass(rev.status)}"><i class="${statusIcon(rev.status)}"></i>${rev.status}</span>
+      <span class="s_stamp s_notilt ${stampClass(rev.status)}"><i class="${statusIcon(rev.status)}"></i>${escapeHtml(rev.status)}</span>
     </div>
-
+  
     <div class="s_detail_section">
       <p class="s_detail_section_label">Overall Score</p>
       <div class="s_score_row">
         <div class="s_score_stars">${starsHtml(rev.score, true)}</div>
         ${
-          rev.score !== null
-            ? `<span class="s_score_val">${rev.score}</span>
+  rev.score !== null
+  ? `<span class="s_score_val">${escapeHtml(String(rev.score))}</span>
         <div class="s_score_bar_wrap"><div class="s_score_bar_fill" style="width:${pct}%"></div></div>`
-            : ""
-        }
+  : ""
+}
       </div>
     </div>
 
     ${
-      rev.comments
-        ? `
+rev.comments
+? `
     <div class="s_detail_section">
       <p class="s_detail_section_label">Manager Comments</p>
-      <p class="s_detail_comments">"${rev.comments}"</p>
+      <p class="s_detail_comments">"${escapeHtml(rev.comments)}"</p>
     </div>`
-        : ""
-    }
+: ""
+}
 
     ${
-      rev.strengths.length || rev.growth.length
-        ? `
+rev.strengths.length || rev.growth.length
+? `
     <div class="s_detail_section">
       <div class="s_strengths_grid">
         <div>
           <p class="s_detail_section_label">Strengths</p>
           <ul class="s_bullet_list" style="--bullet-color:var(--present)">
-            ${rev.strengths.map((s) => `<li>${s}</li>`).join("")}
+            ${rev.strengths.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}
           </ul>
         </div>
         <div>
           <p class="s_detail_section_label">Growth Areas</p>
           <ul class="s_bullet_list" style="--bullet-color:var(--ink)">
-            ${rev.growth.map((g) => `<li>${g}</li>`).join("")}
+            ${rev.growth.map((g) => `<li>${escapeHtml(g)}</li>`).join("")}
           </ul>
         </div>
       </div>
     </div>`
-        : ""
-    }
+: ""
+}
   `;
 }
 
@@ -312,24 +210,17 @@ function updateReviewStarButtons() {
   });
 }
 
-function submitReviewForm() {
+async function submitReviewForm() {
   const empId = Number(document.getElementById("rv_employee").value);
   const cycle = document.getElementById("rv_cycle").value.trim();
   const status = document.getElementById("rv_status").value;
   const manager = document.getElementById("rv_manager").value.trim();
   const comments = document.getElementById("rv_comments").value.trim();
-  const strengths = document
-    .getElementById("rv_strengths")
-    .value.split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const growth = document
-    .getElementById("rv_growth")
-    .value.split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  const strengths = document.getElementById("rv_strengths").value.split(",").map((s) => s.trim()).filter(Boolean);
+  const growth = document.getElementById("rv_growth").value.split(",").map((s) => s.trim()).filter(Boolean);
+  
   const errEl = document.getElementById("rv_error");
-
+  
   if (!empId) {
     errEl.textContent = "Please select an employee.";
     errEl.style.display = "block";
@@ -341,79 +232,92 @@ function submitReviewForm() {
     return;
   }
   errEl.style.display = "none";
-
-  const score = pendingScore > 0 ? pendingScore : null;
-  const newId = Math.max(0, ...REVIEWS.map((r) => r.id)) + 1;
-  const rev = {
-    id: newId,
+  
+  const reviewPayload = {
     employeeId: empId,
     cycle,
     status,
-    score,
+    score: pendingScore > 0 ? pendingScore : null,
     manager,
     comments,
     strengths,
     growth,
   };
-  REVIEWS.unshift(rev);
-  selectedReviewId = newId;
-  hideAddReviewForm();
-  renderReviewHeader();
-  renderReviewList();
-  renderReviewDetail();
-  showToast("Review added successfully");
+  
+  try {
+    const res = await fetch("/api/reviews", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(reviewPayload),
+    });
+    
+    if (res.ok) {
+      hideAddReviewForm();
+      await loadReviewsFromApi();
+      showToast("Review added successfully");
+    } else {
+      errEl.textContent = "Couldn't save the review. Please try again.";
+      errEl.style.display = "block";
+    }
+  } catch (err) {
+    console.error("Error submitting review:", err);
+    errEl.textContent = "Network error — please check your connection and try again.";
+    errEl.style.display = "block";
+  }
 }
+
+
 
 /* ── Filter chips ── */
 function wireReviewFilterChips() {
   document
-    .getElementById("reviewFilterChips")
-    .querySelectorAll(".s_filter_chip")
-    .forEach((btn) => {
-      btn.addEventListener("click", () => {
-        reviewFilterStatus = btn.dataset.filter;
-        document
-          .querySelectorAll("#reviewFilterChips .s_filter_chip")
-          .forEach((b) => b.classList.remove("s_active"));
-        btn.classList.add("s_active");
-        renderReviewList();
-      });
+  .getElementById("reviewFilterChips")
+  .querySelectorAll(".s_filter_chip")
+  .forEach((btn) => {
+    btn.addEventListener("click", () => {
+      reviewFilterStatus = btn.dataset.filter;
+      document
+      .querySelectorAll("#reviewFilterChips .s_filter_chip")
+      .forEach((b) => b.classList.remove("s_active"));
+      btn.classList.add("s_active");
+      renderReviewList();
     });
+  });
 }
 
 /* ── Star input ── */
 function wireReviewStarInput() {
   document
-    .getElementById("starInput")
-    .querySelectorAll(".s_star_btn")
-    .forEach((btn) => {
-      btn.addEventListener("mouseover", () => {
-        document
-          .querySelectorAll("#starInput .s_star_btn")
-          .forEach((b) =>
-            b.classList.toggle(
-              "s_on",
-              Number(b.dataset.val) <= Number(btn.dataset.val),
-            ),
-          );
-      });
-      btn.addEventListener("mouseleave", updateReviewStarButtons);
-      btn.addEventListener("click", () => {
-        pendingScore = Number(btn.dataset.val);
-        updateReviewStarButtons();
-      });
-    });
+  .getElementById("starInput")
+  .querySelectorAll(".s_star_btn")
+  .forEach((btn) => {
+    btn.addEventListener("mouseover", () => {
+      document
+      .querySelectorAll("#starInput .s_star_btn")
+      .forEach((b) =>
+        b.classList.toggle(
+        "s_on",
+        Number(b.dataset.val) <= Number(btn.dataset.val),
+      ),
+    );
+  });
+  btn.addEventListener("mouseleave", updateReviewStarButtons);
+  btn.addEventListener("click", () => {
+    pendingScore = Number(btn.dataset.val);
+    updateReviewStarButtons();
+  });
+});
 }
 
 /* ── Boot (Reviews page) ── */
 (async function initReviewsPage() {
   if (!document.getElementById("reviewList")) return; // not the reviews page
-
+  
   document.documentElement.style.setProperty(
     "--noise-uri",
     buildNoiseDataUri(),
   );
-
+  
   wireReviewFilterChips();
   wireReviewStarInput();
   const openAddBtn = document.getElementById("openAddBtn");
@@ -423,19 +327,18 @@ function wireReviewStarInput() {
   const rvCancel = document.getElementById("rv_cancel");
   if (rvCancel)
     rvCancel.addEventListener("click", () => {
-      hideAddReviewForm();
-      renderReviewDetail();
-    });
-
+    hideAddReviewForm();
+    renderReviewDetail();
+  });
+  
   try {
     await loadData();
-
-    REVIEWS = SEED_REVIEWS.map((r) => ({ ...r }));
+    
     populateReviewEmployeeDropdown();
-    renderReviewHeader();
-    renderReviewList();
+    await loadReviewsFromApi();
   } catch (err) {
     console.error(err);
     showLoadError(err);
   }
+  
 })();
