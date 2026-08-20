@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.routes.js";
 import payrollRouter from "./routes/payroll.routes.js";
 import reviewRoutes from "./routes/reviews.routes.js";
 import attendanceRouter from "./routes/attendance.route.js";
+import calendarRouter from "./routes/calendar.routes.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use("/api/employees", employeesRouter);
 app.use("/api/payroll", payrollRouter);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/attendance", attendanceRouter);
+app.use("/api/calendar", calendarRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Modern Tech API is running" });
