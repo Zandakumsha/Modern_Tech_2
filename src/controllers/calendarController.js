@@ -1,32 +1,33 @@
 import pool from "../config/db.js";
 
-function authenticatedUsername(req) {
-  const username = String(req.user?.username || "").trim();
+function normaliseUsername(value) {
+  const username = String(value || "").trim();
   return username || null;
+}
+
+function getUsername(req) {
+  return normaliseUsername(req.body?.hr_username || req.query?.hr_username || req.headers["x-hr-username"]);
+}
+
+async function getAllEvents() {
+  const [rows] = await pool.query(
+    `SELECT event_id AS id,
+            DATE_FORMAT(event_date, '%Y-%m-%d') AS eventDate,
+            title,
+            TIME_FORMAT(event_time, '%H:%i') AS time,
+            category,
+            description,
+            hr_username
+       FROM calendar_events
+      ORDER BY event_date, event_time, event_id`
+  );
+  return rows;
 }
 
 export async function listEvents(req, res) {
   try {
-    const hrUsername = authenticatedUsername(req);
-
-    if (!hrUsername) {
-      return res.status(401).json({ error: "Authenticated HR username is required." });
-    }
-
-    const [rows] = await pool.query(
-      `SELECT event_id AS id,
-              DATE_FORMAT(event_date, '%Y-%m-%d') AS eventDate,
-              title,
-              TIME_FORMAT(event_time, '%H:%i') AS time,
-              category,
-              description,
-              hr_username
-         FROM calendar_events
-        WHERE hr_username = ?
-        ORDER BY event_date, event_time, event_id`,
-      [hrUsername],
-    );
-
+    // No token/user_id is used. Calendar data comes only from MySQL.
+    const rows = await getAllEvents();
     return res.json(rows);
   } catch (error) {
     console.error("Calendar list error:", error);
@@ -36,11 +37,25 @@ export async function listEvents(req, res) {
 
 export async function createEvent(req, res) {
   try {
-    const hrUsername = authenticatedUsername(req);
-    const { eventDate, title, time, category = "Work", description = "" } = req.body || {};
+    const hrUsername = getUsername(req);
+    const {
+      eventDate,
+      event_date,
+      title,
+      time,
+      event_time,
+      category = "Work",
+      description = ""
+    } = req.body || {};
 
-    if (!hrUsername || !eventDate || !String(title || "").trim() || !time) {
-      return res.status(400).json({ error: "eventDate, title and time are required." });
+    const date = eventDate || event_date;
+    const eventTime = time || event_time;
+    const cleanTitle = String(title || "").trim();
+
+    if (!hrUsername || !date || !cleanTitle || !eventTime) {
+      return res.status(400).json({
+        error: "hr_username, eventDate, title and time are required."
+      });
     }
 
     const allowedCategories = new Set(["Work", "Personal", "Urgent"]);
@@ -52,7 +67,14 @@ export async function createEvent(req, res) {
       `INSERT INTO calendar_events
          (hr_username, event_date, title, event_time, category, description)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [hrUsername, eventDate, String(title).trim(), time, category, String(description || "").trim()],
+      [
+        hrUsername,
+        date,
+        cleanTitle,
+        eventTime,
+        category,
+        String(description || "").trim()
+      ]
     );
 
     const [rows] = await pool.query(
@@ -64,8 +86,8 @@ export async function createEvent(req, res) {
               description,
               hr_username
          FROM calendar_events
-        WHERE event_id = ? AND hr_username = ?`,
-      [result.insertId, hrUsername],
+        WHERE event_id = ?`,
+      [result.insertId]
     );
 
     return res.status(201).json(rows[0]);
@@ -78,15 +100,14 @@ export async function createEvent(req, res) {
 export async function deleteEvent(req, res) {
   try {
     const eventId = Number(req.params.id);
-    const hrUsername = authenticatedUsername(req);
 
-    if (!Number.isInteger(eventId) || eventId <= 0 || !hrUsername) {
-      return res.status(400).json({ error: "A valid event id and authenticated HR user are required." });
+    if (!Number.isInteger(eventId) || eventId <= 0) {
+      return res.status(400).json({ error: "A valid event id is required." });
     }
 
     const [result] = await pool.query(
-      "DELETE FROM calendar_events WHERE event_id = ? AND hr_username = ?",
-      [eventId, hrUsername],
+      "DELETE FROM calendar_events WHERE event_id = ?",
+      [eventId]
     );
 
     if (!result.affectedRows) {
