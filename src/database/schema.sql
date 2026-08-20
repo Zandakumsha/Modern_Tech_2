@@ -1,7 +1,7 @@
 USE defaultdb;
 
 -- ModernTech HR Management System — schema
--- Calendar events are owned by users through calendar_events.user_id.
+-- Tasks are standalone records and are not linked to users.
 
 CREATE TABLE employees (
   employee_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -84,16 +84,14 @@ CREATE TABLE departments (
 
 CREATE TABLE tasks (
   task_id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
   title VARCHAR(200) NOT NULL,
   status ENUM('pending','progress','completed') NOT NULL DEFAULT 'pending',
   priority ENUM('minor','normal','critical') NOT NULL DEFAULT 'normal',
   completed BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-  INDEX idx_tasks_user (user_id),
-  INDEX idx_tasks_status (status)
+  INDEX idx_tasks_status (status),
+  INDEX idx_tasks_priority (priority)
 ) ENGINE=InnoDB;
 
 CREATE TABLE calendar_events (
