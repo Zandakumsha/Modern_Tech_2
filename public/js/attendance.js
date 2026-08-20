@@ -2,20 +2,8 @@
   "use strict";
 
   let attendanceChart = null;
-  let activeTab = "attendance";
 
   const $ = (id) => document.getElementById(id);
-  const user = () => {
-    try {
-      return JSON.parse(localStorage.getItem("currentUser")) || JSON.parse(localStorage.getItem("user")) || {};
-    } catch {
-      return {};
-    }
-  };
-
-  function employeeName(id) {
-    return EMPLOYEES.find((e) => Number(e.employeeId) === Number(id))?.name || "Unknown employee";
-  }
 
   function attendanceForEmployee(employee) {
     return employee.attendance || [];
@@ -86,7 +74,7 @@
     const search = ($("leaveSearch")?.value || "").toLowerCase().trim();
     const status = $("leaveStatus")?.value || "all";
     const rows = ALL_LEAVE.filter((request) => {
-      const text = `${request.name || employeeName(request.employeeId)} ${request.reason || ""}`.toLowerCase();
+      const text = `${request.name || ""} ${request.reason || ""}`.toLowerCase();
       return (!search || text.includes(search)) && (status === "all" || request.status.toLowerCase() === status);
     });
 
@@ -94,7 +82,7 @@
     $("leaveList").innerHTML = rows.map((request) => `
       <div class="s_leave_item" style="padding:14px 0;border-bottom:1px solid var(--border, #ddd)">
         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
-          <strong>${request.name || employeeName(request.employeeId)}</strong>
+          <strong>${request.name || "Unknown employee"}</strong>
           <span class="s_stamp ${stampClass(request.status)}"><i class="${statusIcon(request.status)}"></i>${request.status}</span>
         </div>
         <div>${formatDateLong(request.date)} · ${request.reason || "No reason provided"}</div>
@@ -103,72 +91,6 @@
     `).join("");
 
     $("leaveEmpty").classList.toggle("s_hidden", rows.length !== 0);
-  }
-
-  function populateEmployeeSelect() {
-    const select = $("to_employee");
-    if (!select) return;
-    select.innerHTML = `<option value="">Select employee…</option>` + EMPLOYEES.map((e) => `<option value="${e.employeeId}">${e.name}</option>`).join("");
-    const current = user().employeeId;
-    if (current) select.value = String(current);
-  }
-
-  function renderTimeOff() {
-    const pending = ALL_LEAVE.filter((r) => r.status === "Pending");
-    $("pendingBadge").textContent = pending.length;
-    $("pendingList").innerHTML = pending.length ? pending.map((r) => `
-      <div style="padding:10px 0;border-bottom:1px solid var(--border, #ddd)">
-        <strong>${r.name || employeeName(r.employeeId)}</strong><br>
-        <small>${formatDateLong(r.date)} · ${r.reason || "No reason"}</small>
-        <div style="margin-top:7px;display:flex;gap:7px"><button class="s_btn_primary" data-leave-action="Approved" data-request-id="${r.requestId}">Approve</button><button class="s_filter_reset" data-leave-action="Denied" data-request-id="${r.requestId}">Deny</button></div>
-      </div>`).join("") : `<p class="s_pending_empty_note">No pending requests</p>`;
-
-    $("toAllCount").textContent = `${ALL_LEAVE.length} request${ALL_LEAVE.length === 1 ? "" : "s"}`;
-    $("toAllList").innerHTML = ALL_LEAVE.map((r) => `<div style="padding:10px 0;border-bottom:1px solid var(--border, #ddd)"><strong>${r.name || employeeName(r.employeeId)}</strong> · ${formatDateLong(r.date)} · ${r.reason || "No reason"} <span class="s_stamp ${stampClass(r.status)}">${r.status}</span></div>`).join("");
-    $("toEmpty").classList.toggle("s_hidden", ALL_LEAVE.length !== 0);
-  }
-
-  async function refresh() {
-    await loadData();
-    renderStats();
-    renderChart();
-    renderAttendance();
-    renderLeave();
-    populateEmployeeSelect();
-    renderTimeOff();
-  }
-
-  async function submitLeave() {
-    const error = $("to_error");
-    error.textContent = "";
-    const employeeId = Number($("to_employee").value);
-    const type = $("to_type").value;
-    const startDate = $("to_start").value;
-    const endDate = $("to_end").value;
-    const reason = $("to_reason").value.trim();
-
-    if (!employeeId || !type || !startDate || !endDate) {
-      error.textContent = "Please select an employee, leave type, start date and end date.";
-      return;
-    }
-    if (startDate > endDate) {
-      error.textContent = "End date cannot be before start date.";
-      return;
-    }
-
-    try {
-      await apiFetch("/api/attendance/leave", {
-        method: "POST",
-        body: JSON.stringify({ employeeId, startDate, endDate, type, reason }),
-      });
-      $("to_reason").value = "";
-      $("to_start").value = "";
-      $("to_end").value = "";
-      showToast("Leave request submitted successfully");
-      await refresh();
-    } catch (err) {
-      error.textContent = err.message;
-    }
   }
 
   async function updateLeave(requestId, status) {
@@ -184,6 +106,14 @@
     }
   }
 
+  async function refresh() {
+    await loadData();
+    renderStats();
+    renderChart();
+    renderAttendance();
+    renderLeave();
+  }
+
   function bind() {
     $("attSearch")?.addEventListener("input", renderAttendance);
     $("attAbsenceOnly")?.addEventListener("change", renderAttendance);
@@ -191,7 +121,6 @@
     $("leaveSearch")?.addEventListener("input", renderLeave);
     $("leaveStatus")?.addEventListener("change", renderLeave);
     $("leaveReset")?.addEventListener("click", () => { $("leaveSearch").value = ""; $("leaveStatus").value = "all"; renderLeave(); });
-    $("to_submit")?.addEventListener("click", submitLeave);
 
     document.addEventListener("click", (event) => {
       const button = event.target.closest("[data-leave-action]");
@@ -200,13 +129,11 @@
     });
 
     const tabs = [
-      ["tabBtnAttendance", "panelAttendance", "attendance"],
-      ["tabBtnLeave", "panelLeave", "leave"],
-      ["tabBtnTimeOff", "panelTimeOff", "timeoff"],
+      ["tabBtnAttendance", "panelAttendance"],
+      ["tabBtnLeave", "panelLeave"],
     ];
-    tabs.forEach(([buttonId, panelId, tab]) => {
+    tabs.forEach(([buttonId, panelId]) => {
       $(buttonId)?.addEventListener("click", () => {
-        activeTab = tab;
         tabs.forEach(([b, p]) => {
           $(b)?.classList.toggle("s_active", b === buttonId);
           $(b)?.setAttribute("aria-selected", b === buttonId ? "true" : "false");
