@@ -1,340 +1,107 @@
-// ==== Nonhlanhla's Employee Data functionality====
-// Guarded so this Employees Data page code doesn't run (and crash) on other
-// pages like calendar.html, which don't have an #employeeTable element.
-if (document.getElementById("employeeTable")) {
+// Modern Tech - Employees Data backed by Express/MySQL
+(() => {
+  "use strict";
+  const table = document.getElementById("employeeTable");
+  if (!table) return;
+  const API = "/api/employees";
   let allEmployees = [];
-  // Loads employee data — checks localStorage first, falls back to the JSON file
-  function loadEmployeeData() {
-    let savedData = localStorage.getItem("employees");
 
-    if (savedData) {
-      // We have data saved from before — use that instead of fetching
-      allEmployees = JSON.parse(savedData);
-      showTable(allEmployees);
-      return;
+  async function api(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    const token = localStorage.getItem("authToken");
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch(url, { ...options, headers });
+    const type = response.headers.get("content-type") || "";
+    const data = type.includes("application/json") ? await response.json() : null;
+    if (response.status === 401) {
+      sessionStorage.clear(); localStorage.removeItem("authToken"); window.location.href = "login.html"; throw new Error("Session expired");
     }
-
-    // No saved data yet — this must be the first time, so fetch the starting data
-    fetch("employee_info.json")
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (data) {
-        allEmployees = data.employeeInformation;
-        saveToLocalStorage();
-        showTable(allEmployees);
-      });
+    if (!response.ok) throw new Error(data?.message || `Request failed (${response.status})`);
+    return data;
   }
 
-  // Saves the current employee list to the browser's storage
-  function saveToLocalStorage() {
-    localStorage.setItem("employees", JSON.stringify(allEmployees));
+  function toast(message, type = "success") {
+    const el = document.getElementById("toast"); const msg = document.getElementById("toast-message");
+    if (!el || !msg) return alert(message);
+    msg.textContent = message; el.className = type; el.style.display = "block";
+    setTimeout(() => { el.style.display = "none"; }, 2500);
   }
 
-  loadEmployeeData();
-
-  // Renders the employee table from an array of employees
-  function showTable(employees) {
-    let table = document.getElementById("employeeTable");
-    table.innerHTML = "";
-
-    for (let i = 0; i < employees.length; i++) {
-      let tableRow = document.createElement("tr");
-      tableRow.innerHTML = `
-      <td>${employees[i].name}</td>
-      <td>${employees[i].position}</td>
-      <td>${employees[i].department}</td>
-      <td>R${employees[i].salary.toLocaleString()}</td>
-      <td>${employees[i].contact}</td>
-      <td><button data-id="${employees[i].employeeId}">View</button></td>`;
-      table.appendChild(tableRow);
-    }
-
-    if (employees.length === 0) {
-      let emptyRow = document.createElement("tr");
-      emptyRow.innerHTML = `<td colspan="6">No employees found</td>`;
-      table.appendChild(emptyRow);
-    }
-
-    updateResultsCount(employees);
+  function render(list) {
+    table.innerHTML = list.length ? list.map(e => `<tr>
+      <td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.position)}</td><td>${escapeHtml(e.department)}</td>
+      <td>R${Number(e.salary || 0).toLocaleString()}</td><td>${escapeHtml(e.contact)}</td>
+      <td><button data-id="${e.employeeId}">View</button></td></tr>`).join("") : `<tr><td colspan="6">No employees found</td></tr>`;
+    const count = document.getElementById("n-resultsCount"); if (count) count.textContent = `Showing ${list.length} of ${allEmployees.length} employees`;
   }
 
-  // Updates the results count text when HR staff searches or filters
-  function updateResultsCount(employees) {
-    document.getElementById("n-resultsCount").textContent =
-      "Showing " +
-      employees.length +
-      " of " +
-      allEmployees.length +
-      " employees";
+  function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+
+  function filter() {
+    const search = (document.getElementById("searchName")?.value || "").toLowerCase();
+    const department = document.getElementById("n-departmentFilter")?.value || "All Departments";
+    render(allEmployees.filter(e => e.name.toLowerCase().includes(search) && (department === "All Departments" || e.department === department)));
   }
 
-  // Filters employees based on both search and department inputs
-  function filterEmployees() {
-    let searchValue = document.getElementById("searchName").value.toLowerCase();
-    let selectedDepartment =
-      document.getElementById("n-departmentFilter").value;
-
-    let filtered = allEmployees.filter(function (employee) {
-      let matchesName = employee.name.toLowerCase().includes(searchValue);
-      let matchesDepartment =
-        selectedDepartment === "All Departments" ||
-        employee.department === selectedDepartment;
-      return matchesName && matchesDepartment;
-    });
-
-    showTable(filtered);
+  function fillModal(e) {
+    document.getElementById("n-modalName").textContent = e.name;
+    document.getElementById("n-modalId").textContent = `Employee ID: ${e.employeeId}`;
+    document.getElementById("n-modalContact").textContent = `Email: ${e.contact}`;
+    document.getElementById("n-modalPosition").textContent = `Position: ${e.position}`;
+    document.getElementById("n-modalDepartment").textContent = `Department: ${e.department}`;
+    document.getElementById("n-modalHistory").textContent = `History: ${e.employmentHistory || "Not recorded"}`;
+    document.getElementById("n-modalSalary").textContent = `Salary: R${Number(e.salary || 0).toLocaleString()}`;
+    document.getElementById("deleteEmployee").dataset.id = e.employeeId;
+    document.getElementById("n-viewModal").classList.add("active");
   }
 
-  // Search event listener
-  document.getElementById("searchName").addEventListener("input", function () {
-    filterEmployees();
+  async function saveEmployee() {
+    const id = document.getElementById("deleteEmployee").dataset.id;
+    const body = {
+      name: document.getElementById("edit-name").value.trim(),
+      contact: document.getElementById("edit-contact").value.trim(),
+      position: document.getElementById("edit-position").value.trim(),
+      department: document.getElementById("edit-department").value.trim(),
+      employmentHistory: document.getElementById("edit-history").value.trim(),
+      salary: Number(document.getElementById("edit-salary").value),
+    };
+    if (!body.name || !body.contact || !body.position || !body.department || !Number.isFinite(body.salary) || body.salary <= 0) return alert("Please complete all required fields with a valid salary.");
+    try {
+      const data = await api(id === "new" ? API : `${API}/${id}`, { method: id === "new" ? "POST" : "PUT", body: JSON.stringify(body) });
+      const employee = data.employee;
+      if (id === "new") allEmployees.push(employee); else allEmployees = allEmployees.map(e => String(e.employeeId) === String(id) ? employee : e);
+      filter(); document.getElementById("n-viewModal").classList.remove("active"); toast("Employee saved successfully.");
+    } catch (error) { toast(error.message, "error"); }
+  }
+
+  document.getElementById("searchName")?.addEventListener("input", filter);
+  document.getElementById("n-departmentFilter")?.addEventListener("change", filter);
+  document.getElementById("n-closeModal")?.addEventListener("click", () => document.getElementById("n-viewModal").classList.remove("active"));
+  table.addEventListener("click", event => { const button = event.target.closest("button[data-id]"); if (!button) return; const e = allEmployees.find(x => String(x.employeeId) === button.dataset.id); if (e) fillModal(e); });
+
+  document.getElementById("deleteEmployee")?.addEventListener("click", async function () {
+    const id = this.dataset.id; if (!id || id === "new" || !confirm("Are you sure you want to delete this employee?")) return;
+    try { await api(`${API}/${id}`, { method: "DELETE" }); allEmployees = allEmployees.filter(e => String(e.employeeId) !== String(id)); filter(); document.getElementById("n-viewModal").classList.remove("active"); toast("Employee deleted successfully."); }
+    catch (error) { toast(error.message, "error"); }
   });
 
-  // Department filter event listener
-  document
-    .getElementById("n-departmentFilter")
-    .addEventListener("change", function () {
-      filterEmployees();
-    });
-
-  // Modal JavaScript — listen for clicks inside the tbody
-  document
-    .getElementById("employeeTable")
-    .addEventListener("click", function (event) {
-      if (event.target.tagName === "BUTTON") {
-        let employeeId = parseInt(event.target.getAttribute("data-id"));
-
-        let employee = allEmployees.find(function (emp) {
-          return emp.employeeId === employeeId;
-        });
-
-        // Safety check — stop if employee not found
-        if (!employee) return;
-
-        document.getElementById("n-modalName").textContent = employee.name;
-        document.getElementById("n-modalId").textContent =
-          "Employee ID: " + employee.employeeId;
-        document.getElementById("n-modalContact").textContent =
-          "Email: " + employee.contact;
-        document.getElementById("n-modalPosition").textContent =
-          "Position: " + employee.position;
-        document.getElementById("n-modalDepartment").textContent =
-          "Department: " + employee.department;
-        document.getElementById("n-modalHistory").textContent =
-          "History: " + employee.employmentHistory;
-        document.getElementById("n-modalSalary").textContent =
-          "Salary: R" + employee.salary.toLocaleString();
-
-        document
-          .getElementById("deleteEmployee")
-          .setAttribute("data-id", employee.employeeId);
-
-        document.getElementById("n-viewModal").classList.add("active");
-      }
-    });
-
-  // Close modal
-  document
-    .getElementById("n-closeModal")
-    .addEventListener("click", function () {
-      document.getElementById("n-editForm").style.display = "none";
-      document.getElementById("n-viewDetails").style.display = "block";
-      document.getElementById("n-viewModal").classList.remove("active");
-    });
-
-  // Delete employee
-  document
-    .getElementById("deleteEmployee")
-    .addEventListener("click", function () {
-      let employeeId = parseInt(this.getAttribute("data-id"));
-
-      if (confirm("Are you sure you want to delete this employee?")) {
-        allEmployees = allEmployees.filter(function (emp) {
-          return emp.employeeId !== employeeId;
-        });
-
-        saveToLocalStorage();
-        filterEmployees();
-        document.getElementById("n-viewModal").classList.remove("active");
-        showToast("Employee deleted successfully.", "success");
-      }
-    });
-
-  // Edit button — switch to edit mode
-  document
-    .getElementById("editEmployee")
-    .addEventListener("click", function () {
-      let employeeId = parseInt(
-        document.getElementById("deleteEmployee").getAttribute("data-id"),
-      );
-
-      let employee = allEmployees.find(function (emp) {
-        return emp.employeeId === employeeId;
-      });
-
-      // Pre-fill the form with current data
-      document.getElementById("edit-name").value = employee.name;
-      document.getElementById("edit-contact").value = employee.contact;
-      document.getElementById("edit-position").value = employee.position;
-      document.getElementById("edit-department").value = employee.department;
-      document.getElementById("edit-history").value =
-        employee.employmentHistory;
-      document.getElementById("edit-salary").value = employee.salary;
-
-      // Hide details, show form
-      document.getElementById("n-viewDetails").style.display = "none";
-      document.getElementById("n-editForm").style.display = "block";
-    });
-
-  // Cancel edit — behaviour depends on whether adding or editing
-  document.getElementById("cancelEdit").addEventListener("click", function () {
-    let employeeId = document
-      .getElementById("deleteEmployee")
-      .getAttribute("data-id");
-
-    if (employeeId === "new") {
-      // If adding, just close the modal entirely
-      document.getElementById("n-editForm").style.display = "none";
-      document.getElementById("n-viewDetails").style.display = "block";
-      document.getElementById("n-viewModal").classList.remove("active");
-    } else {
-      // If editing, go back to view details
-      document.getElementById("n-editForm").style.display = "none";
-      document.getElementById("n-viewDetails").style.display = "block";
-    }
+  document.getElementById("editEmployee")?.addEventListener("click", function () {
+    const e = allEmployees.find(x => String(x.employeeId) === String(document.getElementById("deleteEmployee").dataset.id)); if (!e) return;
+    ["name","contact","position","department","history","salary"].forEach(k => { const el = document.getElementById(`edit-${k}`); if (el) el.value = k === "salary" ? e.salary : (k === "history" ? e.employmentHistory || "" : e[k] || ""); });
+    document.querySelector("#n-editForm h3").textContent = "Edit Employee"; document.getElementById("n-viewDetails").style.display = "none"; document.getElementById("n-editForm").style.display = "block";
   });
 
-  // Save employee — handles both adding and editing
-  document
-    .getElementById("saveEmployee")
-    .addEventListener("click", function () {
-      // Validation — check required fields
-      let name = document.getElementById("edit-name").value.trim();
-      let contact = document.getElementById("edit-contact").value.trim();
-      let position = document.getElementById("edit-position").value.trim();
-      let department = document.getElementById("edit-department").value.trim();
-      let salary = parseFloat(document.getElementById("edit-salary").value);
-      let history = document.getElementById("edit-history").value.trim();
+  document.getElementById("cancelEdit")?.addEventListener("click", () => { document.getElementById("n-editForm").style.display = "none"; document.getElementById("n-viewDetails").style.display = "block"; if (document.getElementById("deleteEmployee").dataset.id === "new") document.getElementById("n-viewModal").classList.remove("active"); });
+  document.getElementById("saveEmployee")?.addEventListener("click", saveEmployee);
+  document.getElementById("n-addEmployee")?.addEventListener("click", () => {
+    ["name","contact","position","history","salary"].forEach(k => { const el = document.getElementById(`edit-${k}`); if (el) el.value = ""; });
+    document.getElementById("edit-department").selectedIndex = 0; document.getElementById("deleteEmployee").dataset.id = "new";
+    document.querySelector("#n-editForm h3").textContent = "Add Employee"; document.getElementById("n-viewDetails").style.display = "none"; document.getElementById("n-editForm").style.display = "block"; document.getElementById("n-viewModal").classList.add("active");
+  });
 
-      if (
-        name === "" ||
-        contact === "" ||
-        position === "" ||
-        department === ""
-      ) {
-        alert("Please fill in all required fields.");
-        return;
-      }
-
-      if (!contact.includes("@")) {
-        alert("Please enter a valid email address.");
-        return;
-      }
-
-      if (isNaN(salary) || salary <= 0) {
-        alert("Please enter a valid salary greater than 0.");
-        return;
-      }
-
-      let employeeId = document
-        .getElementById("deleteEmployee")
-        .getAttribute("data-id");
-
-      if (employeeId === "new") {
-        // Generate a unique ID — finds the highest existing ID and adds 1
-        let highestId = 0;
-        if (allEmployees.length > 0) {
-          highestId = Math.max(
-            ...allEmployees.map(function (emp) {
-              return emp.employeeId;
-            }),
-          );
-        }
-
-        let newEmployee = {
-          employeeId: highestId + 1,
-          name,
-          contact,
-          position,
-          department,
-          employmentHistory: history,
-          salary,
-        };
-        allEmployees.push(newEmployee);
-      } else {
-        // Update existing employee — reuse validated variables
-        employeeId = parseInt(employeeId);
-        allEmployees = allEmployees.map(function (emp) {
-          if (emp.employeeId === employeeId) {
-            return {
-              employeeId: emp.employeeId,
-              name,
-              contact,
-              position,
-              department,
-              employmentHistory: history,
-              salary,
-            };
-          }
-          return emp;
-        });
-      }
-
-      saveToLocalStorage();
-
-      // Re-render while keeping active search/filter
-      filterEmployees();
-
-      showToast("Employee saved successfully.", "success");
-
-      // Reset form title and close modal
-      document.querySelector("#n-editForm h3").textContent = "Edit Employee";
-      document.getElementById("n-editForm").style.display = "none";
-      document.getElementById("n-viewDetails").style.display = "block";
-      document.getElementById("n-viewModal").classList.remove("active");
-    });
-
-  // Add employee button
-
-  document
-    .getElementById("n-addEmployee")
-    .addEventListener("click", function () {
-      // Clear all form fields
-      document.getElementById("edit-name").value = "";
-      document.getElementById("edit-contact").value = "";
-      document.getElementById("edit-position").value = "";
-      document.getElementById("edit-department").value = "";
-      document.getElementById("edit-history").value = "";
-      document.getElementById("edit-salary").value = "";
-
-      // Change form title to Add Employee
-      document.querySelector("#n-editForm h3").textContent = "Add Employee";
-
-      // Hide view details, show edit form
-      document.getElementById("n-viewDetails").style.display = "none";
-      document.getElementById("n-editForm").style.display = "block";
-
-      // Show the modal
-      document.getElementById("n-viewModal").classList.add("active");
-
-      // Mark as add mode
-      document.getElementById("deleteEmployee").setAttribute("data-id", "new");
-
-      document.getElementById("n-modalName").textContent = "";
-    });
-
-  // Shows a small popup message in the corner, then hides it after 3 seconds
-  function showToast(message, type) {
-    let toast = document.getElementById("toast");
-    let toastMessage = document.getElementById("toast-message");
-
-    toastMessage.textContent = message;
-    toast.className = type;
-    toast.style.display = "block";
-
-    setTimeout(function () {
-      toast.style.display = "none";
-    }, 3000);
+  async function load() {
+    try { const data = await api(API, { cache: "no-store" }); allEmployees = data.employees || []; render(allEmployees); }
+    catch (error) { console.error(error); toast(error.message, "error"); }
   }
-} // end Employees Data page guard
+  load();
+})();
