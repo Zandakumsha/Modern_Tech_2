@@ -168,6 +168,51 @@ function syncProfileInfo() {
   applyAvatar(savedAvatar);
 }
 
+/*=============== GLOBAL NOTIFICATIONS NAVIGATION + FOOTER ===============*/
+function ensureNotificationsNavigation() {
+  const settingsList = Array.from(document.querySelectorAll(".sidebar__title"))
+    .find((title) => title.textContent.trim().toUpperCase() === "SETTINGS")
+    ?.parentElement?.querySelector(".sidebar__list");
+
+  if (settingsList && !settingsList.querySelector('a[href="notifications.html"]')) {
+    const link = document.createElement("a");
+    link.href = "notifications.html";
+    link.className = "sidebar__link";
+    link.innerHTML = '<i class="ri-notification-3-fill"></i><span>Notifications</span><span id="notification-count" class="notification-badge">0</span>';
+    settingsList.insertBefore(link, settingsList.firstElementChild);
+  }
+
+  document.querySelectorAll('.sidebar__list a[href="notifications.html"]').forEach((link) => {
+    if (window.location.pathname.endsWith("/notifications.html")) link.classList.add("active-link");
+  });
+}
+
+function ensureNotificationsFooter() {
+  let footer = document.querySelector("footer");
+
+  if (!footer) {
+    footer = document.createElement("footer");
+    footer.innerHTML = `
+      <div class="footer_container">
+        <div class="footer_content"><i class="ri-cloud-fill"></i><h2>Modern Tech</h2><p>Modern Technology Solutions is a leading provider of HR management solutions.</p></div>
+        <div class="footer-col"><h3>Links</h3><ul></ul></div>
+        <div class="footer-col"><h3>Contact Us</h3><ul><li><i class="ri-mail-fill"></i> info@modern-tech.com</li><li><i class="ri-phone-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne 7780</li></ul></div>
+        <div class="footer-col"><h3>Follow Us</h3><ul><li><i class="ri-github-fill"></i><a href="#">Github</a></li><li><i class="ri-linkedin-fill"></i><a href="#">LinkedIn</a></li></ul></div>
+      </div>
+      <hr /><p class="footer_copy">&copy; 2024 Modern Tech. All rights reserved.</p>`;
+    document.body.appendChild(footer);
+  }
+
+  const linksColumn = Array.from(footer.querySelectorAll(".footer-col"))
+    .find((column) => column.querySelector("h3")?.textContent.trim().toLowerCase() === "links");
+  const linksList = linksColumn?.querySelector("ul");
+  if (linksList && !linksList.querySelector('a[href="notifications.html"]')) {
+    const item = document.createElement("li");
+    item.innerHTML = '<a href="notifications.html"><i class="ri-notification-3-fill"></i> Notifications</a>';
+    linksList.appendChild(item);
+  }
+}
+
 const protectedPages = ["index.html", "attendance.html"];
 const currentPage = window.location.pathname.split("/").pop();
 const hasSession = sessionStorage.getItem("authenticated") === "true";
@@ -191,6 +236,8 @@ if (logoutBtn) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  ensureNotificationsNavigation();
+  ensureNotificationsFooter();
   syncProfileInfo();
 
   const darkModeToggle = document.getElementById("darkModeToggle");
