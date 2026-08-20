@@ -9,67 +9,20 @@
   </head>
   <body>
     <header class="header" id="header"><div class="header__container"><a href="#" class="header__logo"><i class="ri-cloud-fill"></i><span>Modern Tech</span></a><div class="header__toggle" id="header-toggle"><i class="ri-menu-line"></i></div></div></header>
-
-    <nav class="sidebar" id="sidebar">
-      <div class="sidebar__container">
-        <div class="sidebar__user"><div class="sidebar__img"><img id="navbarProfileImage" src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg" alt="Profile Avatar" /></div><div class="sidebar__info"><h3 id="sidebar-user-name">User</h3><span id="sidebar-user-email">user@email.com</span><span class="user-profile" id="sidebar_role">Admin</span></div></div>
-        <div class="sidebar__content">
-          <div><h3 class="sidebar__title">MANAGE</h3><div class="sidebar__list">
-            <a href="index.html" class="sidebar__link"><i class="ri-pie-chart-2-fill"></i><span>Dashboard</span></a>
-            <a href="data.html" class="sidebar__link"><i class="ri-team-fill"></i><span>Employees Data</span></a>
-            <a href="payroll.html" class="sidebar__link"><i class="ri-secure-payment-fill"></i><span>Payroll</span></a>
-            <a href="attendance.html" class="sidebar__link active-link"><i class="ri-calendar-event-fill"></i><span>Attendance</span></a>
-            <a href="calendar.html" class="sidebar__link"><i class="ri-calendar-fill"></i><span>Calendar</span></a>
-          </div></div>
-          <div><h3 class="sidebar__title">SETTINGS</h3><div class="sidebar__list"><a href="settings.html" class="sidebar__link"><i class="ri-settings-3-fill"></i><span>Settings</span></a><a href="reviews.html" class="sidebar__link"><i class="ri-mail-unread-fill"></i><span>Reviews</span></a></div></div>
-        </div>
-        <div class="sidebar__actions"><div class="sidebar__theme-selector"><i class="ri-moon-clear-fill sidebar__link sidebar__theme" id="theme-button"><span>Theme</span></i></div><div class="sidebar__link" id="logout-btn"><i class="ri-logout-box-r-fill"></i><span>Log Out</span></div></div>
-      </div>
-    </nav>
-
+    <nav class="sidebar" id="sidebar"><div class="sidebar__container"><div class="sidebar__user"><div class="sidebar__img"><img id="navbarProfileImage" src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg" alt="Profile Avatar" /></div><div class="sidebar__info"><h3 id="sidebar-user-name">User</h3><span id="sidebar-user-email">user@email.com</span><span class="user-profile" id="sidebar_role">Admin</span></div></div><div class="sidebar__content"><div><h3 class="sidebar__title">MANAGE</h3><div class="sidebar__list"><a href="index.html" class="sidebar__link"><i class="ri-pie-chart-2-fill"></i><span>Dashboard</span></a><a href="data.html" class="sidebar__link"><i class="ri-team-fill"></i><span>Employees Data</span></a><a href="payroll.html" class="sidebar__link"><i class="ri-secure-payment-fill"></i><span>Payroll</span></a><a href="attendance.html" class="sidebar__link active-link"><i class="ri-calendar-event-fill"></i><span>Attendance</span></a><a href="calendar.html" class="sidebar__link"><i class="ri-calendar-fill"></i><span>Calendar</span></a></div></div><div><h3 class="sidebar__title">SETTINGS</h3><div class="sidebar__list"><a href="settings.html" class="sidebar__link"><i class="ri-settings-3-fill"></i><span>Settings</span></a><a href="reviews.html" class="sidebar__link"><i class="ri-mail-unread-fill"></i><span>Reviews</span></a></div></div></div><div class="sidebar__actions"><div class="sidebar__theme-selector"><i class="ri-moon-clear-fill sidebar__link sidebar__theme" id="theme-button"><span>Theme</span></i></div><div class="sidebar__link" id="logout-btn"><i class="ri-logout-box-r-fill"></i><span>Log Out</span></div></div></div></nav>
     <main class="main container" id="main">
-      <h2 class="s_section_title" style="padding: 3px">Attendance</h2>
+      <h2 class="s_section_title" style="padding:3px">Attendance</h2>
       <div class="attendance_container">
         <section class="s_stats" id="statsRow" aria-label="Summary statistics"></section>
-        <div class="s_chart_card"><p class="s_chart_title">Daily attendance trend</p><div class="s_chart_wrap"><canvas id="attendanceChart"></canvas></div><div class="s_chart_legend"><div class="s_legend_item"><div class="s_legend_dot s_legend_dot_present" style="background: var(--present)"></div>Present</div><div class="s_legend_item"><div class="s_legend_dot s_legend_dot_absent" style="background: var(--absent)"></div>Absent</div></div></div>
-
-        <div class="s_tabs" role="tablist">
-          <button class="s_tab_btn s_active" id="tabBtnAttendance" role="tab" aria-selected="true">Daily Attendance</button>
-          <button class="s_tab_btn" id="tabBtnLeave" role="tab" aria-selected="false">Leave Requests</button>
-          <button class="s_tab_btn" id="tabBtnTimeOff" role="tab" aria-selected="false">Time Off</button>
-        </div>
-
-        <section class="s_panel" id="panelAttendance" role="tabpanel">
-          <div class="s_filters"><input class="s_input" type="text" id="attSearch" placeholder="Search employee name…" aria-label="Search employees" /><label class="s_checkbox_field"><input type="checkbox" id="attAbsenceOnly" /> Only show staff with an absence</label><button class="s_filter_reset" id="attReset" type="button">Reset filters</button></div><br />
-          <div class="s_result_count" id="attCount"></div><div class="s_table_scroll"><table id="attTable"><thead><tr id="attHeadRow"></tr></thead><tbody id="attBody"></tbody></table></div>
-          <div class="s_empty_state s_hidden" id="attEmpty"><span class="s_stamp s_stamp_absent">No match</span><p>No staff match your filters.</p></div>
-        </section>
-
-        <section class="s_panel s_hidden" id="panelLeave" role="tabpanel">
-          <div class="s_filters"><input class="s_input" type="text" id="leaveSearch" placeholder="Search employee or reason…" aria-label="Search leave requests" /><select class="s_input" id="leaveStatus" aria-label="Filter by status"><option value="all">All statuses</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="denied">Denied</option></select><button class="s_filter_reset" id="leaveReset" type="button">Reset filters</button></div>
-          <div class="s_result_count" id="leaveCount"></div><div id="leaveList"></div><div class="s_empty_state s_hidden" id="leaveEmpty"><span class="s_stamp s_stamp_pending">No match</span><p>No leave requests match your filters.</p></div>
-        </section>
-
-        <section class="s_panel s_hidden" id="panelTimeOff" role="tabpanel">
-          <div class="s_timeoff_grid"><div><div class="s_timeoff_form_card"><p class="s_timeoff_form_title">New Request</p>
-            <div class="s_form_group"><label class="s_field_label" for="to_employee">Employee</label><select class="s_select" id="to_employee"><option value="">Select employee…</option></select></div>
-            <div class="s_form_group"><label class="s_field_label" for="to_type">Leave Type</label><select class="s_select" id="to_type"><option value="">Select type…</option><option>Annual Leave</option><option>Sick Leave</option><option>Family Responsibility</option><option>Bereavement</option><option>Maternity / Paternity</option><option>Study Leave</option><option>Unpaid Leave</option><option>Other</option></select></div>
-            <div class="s_form_group s_field_row"><div><label class="s_field_label" for="to_start">Start Date</label><input class="s_input" type="date" id="to_start" /></div><div><label class="s_field_label" for="to_end">End Date</label><input class="s_input" type="date" id="to_end" /></div></div>
-            <div class="s_form_group"><label class="s_field_label" for="to_reason">Reason <span class="s_reason_optional">(optional)</span></label><textarea class="s_textarea" id="to_reason" placeholder="Brief description…"></textarea></div>
-            <button class="s_btn_primary s_full_width" id="to_submit" type="button">Submit Request</button><div id="to_error" class="s_to_error"></div>
-          </div></div>
-          <div><div class="s_pending_card"><p class="s_pending_title">Pending Approval <span class="s_pending_badge" id="pendingBadge">0</span></p><div id="pendingList"><p class="s_pending_empty_note">No pending requests</p></div></div></div></div>
-          <hr class="s_timeoff_divider" /><div class="s_all_requests_hd"><p class="s_all_requests_title">All Requests</p><span class="s_all_requests_count" id="toAllCount"></span></div><div class="s_all_requests" id="toAllList"></div><div class="s_empty_state s_hidden" id="toEmpty"><span class="s_stamp s_stamp_pending">No requests yet</span></div>
-        </section>
+        <div class="s_chart_card"><p class="s_chart_title">Daily attendance trend</p><div class="s_chart_wrap"><canvas id="attendanceChart"></canvas></div><div class="s_chart_legend"><div class="s_legend_item"><div class="s_legend_dot s_legend_dot_present" style="background:var(--present)"></div>Present</div><div class="s_legend_item"><div class="s_legend_dot s_legend_dot_absent" style="background:var(--absent)"></div>Absent</div></div></div>
+        <div class="s_tabs" role="tablist"><button class="s_tab_btn s_active" id="tabBtnAttendance" role="tab" aria-selected="true">Daily Attendance</button><button class="s_tab_btn" id="tabBtnLeave" role="tab" aria-selected="false">Leave Requests</button><button class="s_tab_btn" id="tabBtnTimeOff" role="tab" aria-selected="false">Time Off</button></div>
+        <section class="s_panel" id="panelAttendance" role="tabpanel"><div class="s_filters"><input class="s_input" type="text" id="attSearch" placeholder="Search employee name…" aria-label="Search employees" /><label class="s_checkbox_field"><input type="checkbox" id="attAbsenceOnly" /> Only show staff with an absence</label><button class="s_filter_reset" id="attReset" type="button">Reset filters</button></div><br /><div class="s_result_count" id="attCount"></div><div class="s_table_scroll"><table id="attTable"><thead><tr id="attHeadRow"></tr></thead><tbody id="attBody"></tbody></table></div><div class="s_empty_state s_hidden" id="attEmpty"><span class="s_stamp s_stamp_absent">No match</span><p>No staff match your filters.</p></div></section>
+        <section class="s_panel s_hidden" id="panelLeave" role="tabpanel"><div class="s_leave_legacy" id="leaveLegacy"><div class="s_filters"><input class="s_input" type="text" id="leaveSearch" placeholder="Search employee or reason…" aria-label="Search leave requests" /><select class="s_input" id="leaveStatus" aria-label="Filter by status"><option value="all">All statuses</option><option value="approved">Approved</option><option value="pending">Pending</option><option value="denied">Denied</option></select><button class="s_filter_reset" id="leaveReset" type="button">Reset filters</button></div><div class="s_result_count" id="leaveCount"></div><div id="leaveList"></div><div class="s_empty_state s_hidden" id="leaveEmpty"><span class="s_stamp s_stamp_pending">No match</span><p>No leave requests match your filters.</p></div></div></section>
+        <section class="s_panel s_hidden" id="panelTimeOff" role="tabpanel"><div class="s_timeoff_grid"><div><div class="s_timeoff_form_card"><p class="s_timeoff_form_title">New Request</p><div class="s_form_group"><label class="s_field_label" for="to_employee">Employee</label><select class="s_select" id="to_employee"><option value="">Select employee…</option></select></div><div class="s_form_group"><label class="s_field_label" for="to_type">Leave Type</label><select class="s_select" id="to_type"><option value="">Select type…</option><option>Annual Leave</option><option>Sick Leave</option><option>Family Responsibility</option><option>Bereavement</option><option>Maternity / Paternity</option><option>Study Leave</option><option>Unpaid Leave</option><option>Other</option></select></div><div class="s_form_group s_field_row"><div><label class="s_field_label" for="to_start">Start Date</label><input class="s_input" type="date" id="to_start" /></div><div><label class="s_field_label" for="to_end">End Date</label><input class="s_input" type="date" id="to_end" /></div></div><div class="s_form_group"><label class="s_field_label" for="to_reason">Reason <span class="s_reason_optional">(optional)</span></label><textarea class="s_textarea" id="to_reason" placeholder="Brief description…"></textarea></div><button class="s_btn_primary s_full_width" id="to_submit" type="button">Submit Request</button><div id="to_error" class="s_to_error"></div></div></div><div><div class="s_pending_card"><p class="s_pending_title">Pending Approval <span class="s_pending_badge" id="pendingBadge">0</span></p><div id="pendingList"><p class="s_pending_empty_note">No pending requests</p></div></div></div></div><hr class="s_timeoff_divider" /><div class="s_all_requests_hd"><p class="s_all_requests_title">All Requests</p><span class="s_all_requests_count" id="toAllCount"></span></div><div class="s_all_requests" id="toAllList"></div><div class="s_empty_state s_hidden" id="toEmpty"><span class="s_stamp s_stamp_pending">No requests yet</span></div></section>
       </div>
-
       <footer><div class="footer_container"><div class="footer_content"><i class="ri-cloud-fill"></i><h2>Modern Tech</h2><p>Modern Technology Solutions is a leading provider of HR management solutions.</p></div><div class="footer-col"><h3>Links</h3><ul><li><a href="index.html">Dashboard</a></li><li><a href="data.html">Employees</a></li><li><a href="payroll.html">Payroll</a></li><li><a href="attendance.html">Attendance</a></li><li><a href="calendar.html">Calendar</a></li></ul></div><div class="footer-col"><h3>Contact Us</h3><ul><li><i class="ri-mail-fill"></i> info@modern-tech.com</li><li><i class="ri-phone-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne 7780</li></ul></div><div class="footer-col"><h3>Follow Us</h3><ul><li><i class="ri-github-fill"></i><a href="#">Github</a></li><li><i class="ri-linkedin-fill"></i><a href="#">LinkedIn</a></li></ul></div></div><hr /><p class="footer_copy">&copy; 2024 Modern Tech. All rights reserved.</p></footer>
     </main>
-
     <div class="s_toast" id="toast"></div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="js/core.js"></script>
-    <script src="js/attendance-common.js"></script>
-    <script src="js/attendance.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="js/core.js"></script><script src="js/attendance-common.js"></script><script src="js/attendance.js"></script><script src="js/attendance-leave-template.js"></script>
   </body>
 </html>
