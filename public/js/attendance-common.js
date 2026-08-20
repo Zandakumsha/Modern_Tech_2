@@ -23,11 +23,11 @@ function hashStr(s) {
 }
 function initials(name) {
   return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  .split(" ")
+  .map((p) => p[0])
+  .slice(0, 2)
+  .join("")
+  .toUpperCase();
 }
 function avatarColor(name) {
   return AVATAR_COLORS[hashStr(name) % AVATAR_COLORS.length];
@@ -98,30 +98,29 @@ function showToast(msg) {
 
 /* ── Load data ── */
 async function loadData() {
-  const res = await fetch("attendance.json", { cache: "no-store" });
+  const res = await fetch("http://localhost:5000/api/employees", { cache: "no-store" });
   if (!res.ok)
-    throw new Error(`Could not load attendance.json (HTTP ${res.status})`);
-  const json = await res.json();
-  const records = json.attendanceAndLeave || [];
+    throw new Error(`Could not load employees from API (HTTP ${res.status})`);
+  
+  const records = await res.json();
   EMPLOYEES = records;
   ALL_DATES = [
     ...new Set(records.flatMap((e) => (e.attendance || []).map((a) => a.date))),
   ].sort();
   ALL_LEAVE = records
-    .flatMap((e) =>
-      (e.leaveRequests || []).map((lr) => ({
-        ...lr,
-        employeeId: e.employeeId,
-        name: e.name,
-      })),
-    )
-    .sort((a, b) => b.date.localeCompare(a.date));
+  .flatMap((e) =>
+    (e.leaveRequests || []).map((lr) => ({
+    ...lr,
+    employeeId: e.employeeId,
+    name: e.name,
+  })),
+)
+.sort((a, b) => b.date.localeCompare(a.date));
 }
-
 /* ── Error ── */
 function showLoadError(err) {
   const container =
-    document.querySelector("main.s_wrap") || document.getElementById("main");
+  document.querySelector("main.s_wrap") || document.getElementById("main");
   if (!container) return;
   container.innerHTML = `<div class="s_empty_state" style="padding-top:60px"><span class="s_stamp s_stamp_absent">Load failed</span><p><strong>Could not read the attendance data.</strong></p><p>${err.message}</p><p>Run <code>npx serve .</code> in your project folder.</p></div>`;
 }

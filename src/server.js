@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import employeesRouter from "./routes/employees.routes.js";
 import authRouter from "./routes/auth.routes.js";
 import payrollRouter from "./routes/payroll.routes.js";
+import reviewRoutes from "./routes/reviews.routes.js"
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRouter);
 app.use("/api/employees", employeesRouter);
 app.use("/api/payroll", payrollRouter);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Modern Tech API is running" });
