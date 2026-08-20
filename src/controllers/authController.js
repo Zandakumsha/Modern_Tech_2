@@ -45,6 +45,7 @@ function createToken(user) {
     {
       userId: user.userId || null,
       employeeId: user.employeeId || null,
+      username: user.username || null,
       role: user.role,
       email: user.email,
     },
@@ -65,9 +66,6 @@ function hrUser() {
 }
 
 async function employeeForPasswordlessLogin(id) {
-  // feature/autha uses the existing employees table as the source of employee access.
-  // Do not query the users table here: this branch can authenticate employees before
-  // separate user credentials have been provisioned.
   const [rows] = await pool.query(
     `SELECT employee_id AS employeeId, name, contact
      FROM employees
