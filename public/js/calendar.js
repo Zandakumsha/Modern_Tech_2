@@ -22,11 +22,30 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
   const key = (year, month, day) => `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
   const token = () => localStorage.getItem("authToken");
 
+  function getStoredUser() {
+    for (const storage of [localStorage, sessionStorage]) {
+      for (const name of ["currentUser", "user"]) {
+        try {
+          const raw = storage.getItem(name);
+          if (raw) { const parsed = JSON.parse(raw); if (parsed) return parsed; }
+        } catch { /* ignore malformed legacy values */ }
+      }
+    }
+    return null;
+  }
+
   function getLoggedInUsername() {
-    try {
-      const user = JSON.parse(localStorage.getItem("currentUser") || localStorage.getItem("user") || "null");
-      return String(user?.username || "").trim();
-    } catch { return sessionStorage.getItem("username") || ""; }
+    const user = getStoredUser();
+    return String(user?.username || user?.email || sessionStorage.getItem("username") || "").trim();
+  }
+
+  function getIdentity() {
+    const user = getStoredUser() || {};
+    return {
+      userId: user.userId ?? user.id ?? null,
+      username: user.username || user.email || sessionStorage.getItem("username") || "",
+      employeeId: user.employeeId ?? localStorage.getItem("employeeId") ?? null,
+    };
   }
 
   function authHeaders(json = false) {
@@ -37,38 +56,41 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
   }
 
   async function parseResponse(response) {
-    const text = await response.text(); let data = null;
+    const text = await response.text();
+    let data = null;
     if (text.trim()) { try { data = JSON.parse(text); } catch { throw new Error(`Server returned invalid JSON (${response.status}).`); } }
-    if (response.status === 401) { sessionStorage.clear(); localStorage.removeItem("authToken"); window.location.href = "login.html"; }
+    if (response.status === 401) { sessionStorage.clear(); localStorage.removeItem("authToken"); window.location.href = "login.html"; return null; }
     if (!response.ok) throw new Error(data?.message || data?.error || `Calendar request failed (${response.status}).`);
     return data;
   }
 
-  function normaliseEvent(event) {
-    return { id: event.id ?? event.event_id, eventDate: String(event.eventDate ?? event.event_date ?? "").slice(0, 10), title: event.title ?? "Untitled event", time: event.time ?? event.event_time ?? "", category: event.category ?? "Work", description: event.description ?? "" };
-  }
+  function normaliseEvent(event) { return { id: event.id ?? event.event_id, eventDate: String(event.eventDate ?? event.event_date ?? "").slice(0, 10), title: event.title ?? "Untitled event", time: event.time ?? event.event_time ?? "", category: event.category ?? "Work", description: event.description ?? "" }; }
   function groupEvents(apiEvents) { const grouped = {}; for (const raw of apiEvents) { const event = normaliseEvent(raw); if (event.eventDate) (grouped[event.eventDate] ||= []).push(event); } return grouped; }
 
   async function loadEvents() {
     if (loading) return; loading = true;
     try {
-      const response = await fetch(API_URL, { headers: authHeaders() });
+      const identity = getIdentity();
+      const query = new URLSearchParams(); Object.entries(identity).forEach(([name, value]) => { if (value !== null && value !== "") query.set(name, value); });
+      const response = await fetch(`${API_URL}?${query.toString()}`, { headers: authHeaders() });
       const data = await parseResponse(response);
+      if (data === null) return;
       events = groupEvents(Array.isArray(data) ? data : []); renderCalendar(); showEvents(selectedDateKey);
     } catch (error) { console.error("Failed to load calendar events:", error); events = {}; renderCalendar(); eventsList.innerHTML = `<p>Unable to load calendar events. ${escapeHtml(error.message)}</p>`; }
     finally { loading = false; }
   }
 
   async function createEvent(eventData) {
-    const username = getLoggedInUsername();
-    if (!username) throw new Error("No logged-in user was found. Please log in again.");
-    const response = await fetch(API_URL, { method: "POST", headers: authHeaders(true), body: JSON.stringify({ userId: JSON.parse(localStorage.getItem("currentUser") || "null")?.userId, username, employeeId: JSON.parse(localStorage.getItem("currentUser") || "null")?.employeeId, eventDate: eventData.eventDate, title: eventData.title, time: eventData.time, category: eventData.category || "Work", description: eventData.description || "" }) });
+    const identity = getIdentity();
+    if (!identity.userId && !identity.employeeId && !identity.username) throw new Error("No logged-in user was found. Please log in again.");
+    const response = await fetch(API_URL, { method: "POST", headers: authHeaders(true), body: JSON.stringify({ ...identity, eventDate: eventData.eventDate, title: eventData.title, time: eventData.time, category: eventData.category || "Work", description: eventData.description || "" }) });
     return parseResponse(response);
   }
 
   async function deleteEvent(eventId) {
     if (!eventId) throw new Error("This event does not have a valid database ID.");
-    const response = await fetch(`${API_URL}/${encodeURIComponent(eventId)}`, { method: "DELETE", headers: authHeaders(true), body: JSON.stringify({ userId: JSON.parse(localStorage.getItem("currentUser") || "null")?.userId, username: getLoggedInUsername(), employeeId: JSON.parse(localStorage.getItem("currentUser") || "null")?.employeeId }) });
+    const identity = getIdentity();
+    const response = await fetch(`${API_URL}/${encodeURIComponent(eventId)}`, { method: "DELETE", headers: authHeaders(true), body: JSON.stringify(identity) });
     return parseResponse(response);
   }
 
@@ -89,6 +111,26 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
   function selectDate(dateKey) { selectedDateKey = dateKey; selectedDay = new Date(`${dateKey}T00:00:00`); selectedDateTitle.textContent = selectedDay.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }); renderCalendar(); showEvents(dateKey); }
   function showEvents(dateKey) { const list = eventsList; const dayEvents = events[dateKey] || []; list.innerHTML = dayEvents.length ? dayEvents.map(e => `<div class="calendar-event"><strong>${escapeHtml(e.title)}</strong><span>${escapeHtml(e.time)} · ${escapeHtml(e.category)}</span><p>${escapeHtml(e.description)}</p><button type="button" data-delete-event="${e.id}">Delete</button></div>`).join("") : "<p>No events for this day.</p>"; list.querySelectorAll("[data-delete-event]").forEach(btn => btn.addEventListener("click", async () => { try { await deleteEvent(btn.dataset.deleteEvent); await loadEvents(); } catch (e) { alert(e.message); } })); }
 
-  eventForm.addEventListener("submit", async event => { event.preventDefault(); if (!selectedDateKey) return alert("Select a date first."); try { await createEvent({ eventDate: selectedDateKey, title: eventTitleInput.value.trim(), time: eventTimeInput.value, category: eventCategoryInput.value, description: eventDescriptionInput.value.trim() }); eventForm.reset(); await loadEvents(); } catch (error) { alert(error.message); } });
+  eventForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    if (!selectedDateKey) return alert("Select a date first.");
+    const title = eventTitleInput.value.trim();
+    const time = eventTimeInput.value;
+    if (!title) return alert("Enter an event title.");
+    if (!time) return alert("Select an event time.");
+    const submitButton = eventForm.querySelector("button[type='submit']");
+    submitButton.disabled = true;
+    submitButton.textContent = "Adding...";
+    try {
+      await createEvent({ eventDate: selectedDateKey, title, time, category: eventCategoryInput.value, description: eventDescriptionInput.value.trim() });
+      eventForm.reset();
+      await loadEvents();
+      selectDate(selectedDateKey);
+    } catch (error) {
+      console.error("Create calendar event error:", error);
+      alert(error.message || "Unable to create calendar event.");
+    } finally { submitButton.disabled = false; submitButton.textContent = "Add Event"; }
+  });
+
   loadEvents();
 }
