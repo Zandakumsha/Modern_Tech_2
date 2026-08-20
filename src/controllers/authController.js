@@ -1,7 +1,10 @@
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import pool from "../config/db.js";
 import { findUserByLogin, findUserByEmail, createUser, getUserById, findEmployeeByEmail } from "../models/userModel.js";
+
+dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret-in-env";
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "2h";
