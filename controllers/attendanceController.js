@@ -1,4 +1,7 @@
 import pool from "../config/db.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 function parsePositiveInt(value) {
   const number = Number(value);
@@ -11,6 +14,10 @@ function isValidDate(value) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+function isValidDecisionStatus(status) {
+  return ["Pending", "Approved", "Denied"].includes(status);
+}
+
 function isAdminOrManager(req) {
   return req.user?.role === "Admin" || req.user?.role === "Manager";
 }
@@ -20,10 +27,14 @@ function canAccessEmployee(req, employeeId) {
 }
 
 function decisionMaker(req) {
-  return {
-    name: String(req.user?.name || req.user?.username || "HR Manager").trim() || "HR Manager",
-    email: String(req.user?.email || "").trim() || null,
-  };
+  // HR currently authenticates from .env. Keep the decision audit tied to the
+  // authenticated HR identity so every employee request records the same
+  // manager information consistently.
+  const envUsername = String(process.env.HR_USERNAME || "").trim();
+  const envEmail = String(process.env.HR_EMAIL || "").trim().toLowerCase();
+  const name = String(req.user?.name || req.user?.username || envUsername || "HR Manager").trim() || "HR Manager";
+  const email = String(req.user?.email || envEmail || "").trim().toLowerCase() || null;
+  return { name, email };
 }
 
 const leaveSelect = `
@@ -36,7 +47,7 @@ const leaveSelect = `
          lr.reason,
          lr.status,
          lr.created_at AS createdAt,
-         lr.decided_at AS decidedAt,
+         DATE_FORMAT(lr.decided_at, '%Y-%m-%d %H:%i:%s') AS decidedAt,
          lr.decided_by_name AS decidedByName,
          lr.decided_by_email AS decidedByEmail
   FROM leave_requests lr
@@ -48,14 +59,7 @@ export async function getAttendance(req, res) {
     const [employees] = await pool.query(`SELECT employee_id AS employeeId, name, position, department FROM employees ORDER BY employee_id`);
     const [attendance] = await pool.query(`SELECT attendance_id AS attendanceId, employee_id AS employeeId, DATE_FORMAT(date, '%Y-%m-%d') AS date, status FROM attendance ORDER BY date DESC`);
     const [leaveRequests] = await pool.query(`${leaveSelect} ORDER BY lr.date DESC`);
-
-    res.json({
-      attendanceAndLeave: employees.map((employee) => ({
-        ...employee,
-        attendance: attendance.filter((row) => Number(row.employeeId) === Number(employee.employeeId)),
-        leaveRequests: leaveRequests.filter((row) => Number(row.employeeId) === Number(employee.employeeId)),
-      })),
-    });
+    res.json({ attendanceAndLeave: employees.map((employee) => ({ ...employee, attendance: attendance.filter((row) => Number(row.employeeId) === Number(employee.employeeId)), leaveRequests: leaveRequests.filter((row) => Number(row.employeeId) === Number(employee.employeeId)) })) });
   } catch (error) {
     console.error("Error retrieving attendance:", error);
     res.status(500).json({ message: "Error retrieving attendance data", error: error.message });
@@ -66,7 +70,6 @@ export async function getEmployeeAttendance(req, res) {
   const employeeId = parsePositiveInt(req.params.employeeId);
   if (!employeeId) return res.status(400).json({ message: "Invalid employee ID" });
   if (!canAccessEmployee(req, employeeId)) return res.status(403).json({ message: "You can only view your own attendance" });
-
   try {
     const [employees] = await pool.query(`SELECT employee_id AS employeeId, name, position, department FROM employees WHERE employee_id = ?`, [employeeId]);
     if (!employees.length) return res.status(404).json({ message: "Employee not found" });
@@ -84,7 +87,6 @@ export async function createAttendance(req, res) {
   const employeeId = parsePositiveInt(req.body?.employeeId);
   const { date, status } = req.body || {};
   if (!employeeId || !isValidDate(date) || !["Present", "Absent"].includes(status)) return res.status(400).json({ message: "employeeId, date (YYYY-MM-DD), and status (Present or Absent) are required" });
-
   try {
     const [employee] = await pool.query("SELECT employee_id FROM employees WHERE employee_id = ?", [employeeId]);
     if (!employee.length) return res.status(404).json({ message: "Employee not found" });
@@ -102,7 +104,6 @@ export async function updateAttendance(req, res) {
   const attendanceId = parsePositiveInt(req.params.attendanceId);
   const { date, status } = req.body || {};
   if (!attendanceId || !isValidDate(date) || !["Present", "Absent"].includes(status)) return res.status(400).json({ message: "attendanceId, date (YYYY-MM-DD), and status (Present or Absent) are required" });
-
   try {
     const [result] = await pool.query("UPDATE attendance SET date = ?, status = ? WHERE attendance_id = ?", [date, status, attendanceId]);
     if (!result.affectedRows) return res.status(404).json({ message: "Attendance record not found" });
@@ -143,11 +144,9 @@ export async function createLeaveRequest(req, res) {
   const { date, startDate, endDate, type, reason } = req.body || {};
   const requestReason = String(type || reason || "").trim();
   if (!employeeId || !requestReason) return res.status(400).json({ message: "employeeId and leave reason/type are required" });
-
   try {
     const [employee] = await pool.query("SELECT employee_id FROM employees WHERE employee_id = ?", [employeeId]);
     if (!employee.length) return res.status(404).json({ message: "Employee not found" });
-
     const dates = [];
     if (date) {
       if (!isValidDate(date)) return res.status(400).json({ message: "date must be YYYY-MM-DD" });
@@ -156,28 +155,20 @@ export async function createLeaveRequest(req, res) {
       if (!isValidDate(startDate) || !isValidDate(endDate) || startDate > endDate) return res.status(400).json({ message: "Valid startDate and endDate are required" });
       const current = new Date(`${startDate}T00:00:00Z`);
       const last = new Date(`${endDate}T00:00:00Z`);
-      while (current <= last) {
-        dates.push(current.toISOString().slice(0, 10));
-        current.setUTCDate(current.getUTCDate() + 1);
-      }
+      while (current <= last) { dates.push(current.toISOString().slice(0, 10)); current.setUTCDate(current.getUTCDate() + 1); }
     }
-
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
       const requests = [];
       for (const requestedDate of dates) {
         const [result] = await connection.query(`INSERT INTO leave_requests (employee_id, date, reason, status) VALUES (?, ?, ?, 'Pending')`, [employeeId, requestedDate, requestReason]);
-        requests.push({ requestId: result.insertId, employeeId, date: requestedDate, reason: requestReason, status: "Pending" });
+        requests.push({ requestId: result.insertId, employeeId, date: requestedDate, reason: requestReason, status: "Pending", decidedAt: null, decidedByName: null, decidedByEmail: null });
       }
       await connection.commit();
       res.status(201).json({ message: "Leave request created successfully", requests });
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
+    } catch (error) { await connection.rollback(); throw error; }
+    finally { connection.release(); }
   } catch (error) {
     console.error("Error creating leave request:", error);
     res.status(500).json({ message: "Error creating leave request", error: error.message });
@@ -188,13 +179,13 @@ export async function updateLeaveRequestStatus(req, res) {
   if (!isAdminOrManager(req)) return res.status(403).json({ message: "Only Admin or Manager users can approve or deny leave" });
   const requestId = parsePositiveInt(req.params.requestId);
   const { status } = req.body || {};
-  if (!requestId || !["Pending", "Approved", "Denied"].includes(status)) return res.status(400).json({ message: "Valid requestId and status are required" });
+  if (!requestId || !isValidDecisionStatus(status)) return res.status(400).json({ message: "Valid requestId and status are required" });
   try {
     const decision = status === "Pending" ? { name: null, email: null } : decisionMaker(req);
-    const [result] = await pool.query(`UPDATE leave_requests SET status = ?, decided_at = CASE WHEN ? = 'Pending' THEN NULL ELSE CURRENT_TIMESTAMP END, decided_by_name = CASE WHEN ? = 'Pending' THEN NULL ELSE ? END, decided_by_email = CASE WHEN ? = 'Pending' THEN NULL ELSE ? END WHERE request_id = ?`, [status, status, status, decision.name, status, decision.email, requestId]);
-    if (!result.affectedRows) return res.status(404).json({ message: "Leave request not found" });
+    await pool.query(`UPDATE leave_requests SET status = ?, decided_at = CASE WHEN ? = 'Pending' THEN NULL ELSE CURRENT_TIMESTAMP END, decided_by_name = CASE WHEN ? = 'Pending' THEN NULL ELSE ? END, decided_by_email = CASE WHEN ? = 'Pending' THEN NULL ELSE ? END WHERE request_id = ?`, [status, status, status, decision.name, status, decision.email, requestId]);
     const [rows] = await pool.query(`${leaveSelect} WHERE lr.request_id = ?`, [requestId]);
-    res.json({ message: "Leave request updated successfully", request: rows[0] });
+    if (!rows.length) return res.status(404).json({ message: "Leave request not found" });
+    res.json({ message: `Leave request ${status.toLowerCase()} successfully`, request: rows[0] });
   } catch (error) {
     console.error("Error updating leave request:", error);
     res.status(500).json({ message: "Error updating leave request", error: error.message });
