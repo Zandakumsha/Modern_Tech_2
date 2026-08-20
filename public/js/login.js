@@ -14,6 +14,7 @@
 
   const employeeForm = document.getElementById("employee-auth-form");
   const employeeIdInput = document.getElementById("login-employee-id");
+  const employeePasswordInput = document.getElementById("login-employee-password");
   const employeeSubmit = document.getElementById("employee-submit");
   const employeeMessage = document.getElementById("employee-message");
 
@@ -27,14 +28,22 @@
     }
   }
 
-  if (sessionStorage.getItem("authenticated") && window.location.pathname.includes("login.html")) {
-    const user = getStoredUser();
+  function clearAuthentication() {
+    sessionStorage.removeItem("authenticated");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("role");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("user");
+    localStorage.removeItem("employeeId");
+    localStorage.removeItem("authToken");
+  }
 
+  if (sessionStorage.getItem("authenticated") === "true" && localStorage.getItem("authToken") && window.location.pathname.includes("login.html")) {
+    const user = getStoredUser();
     if (user?.role === "Staff" && user.employeeId) {
       window.location.href = "employee.html";
       return;
     }
-
     if (user?.role === "Admin" || user?.role === "Manager") {
       window.location.href = "index.html";
       return;
@@ -51,103 +60,101 @@
     hrMessage.textContent = "";
   });
 
-  async function requestLogin(payload) {
+  async function requestLogin(username, password) {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ username, password }),
     });
 
     const contentType = response.headers.get("content-type") || "";
     const data = contentType.includes("application/json") ? await response.json() : {};
 
-    if (!response.ok) {
-      throw new Error(data.message || "Login failed");
-    }
-
+    if (!response.ok) throw new Error(data.message || "Invalid username/email or password");
+    if (!data.token || !data.user) throw new Error("The server returned an incomplete login response.");
     return data;
   }
 
   function saveAuthenticatedUser(data) {
     const user = { ...(data.user || {}) };
-
     localStorage.setItem("currentUser", JSON.stringify(user));
     localStorage.setItem("user", JSON.stringify(user));
-
-    if (user.employeeId) {
-      localStorage.setItem("employeeId", String(user.employeeId));
-    }
-
-    if (data.token) {
-      localStorage.setItem("authToken", data.token);
-    }
-
+    if (user.employeeId) localStorage.setItem("employeeId", String(user.employeeId));
+    localStorage.setItem("authToken", data.token);
     sessionStorage.setItem("authenticated", "true");
-    sessionStorage.setItem(
-      "username",
-      user.username || user.email || String(user.employeeId || "User")
-    );
+    sessionStorage.setItem("username", user.username || user.email || String(user.employeeId || "User"));
     sessionStorage.setItem("role", user.role || "");
+  }
+
+  function showMessage(element, message, success = false) {
+    element.textContent = message;
+    element.classList.toggle("login_success", success);
+    element.classList.toggle("login_error", !success);
   }
 
   hrForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-
     const username = hrUsernameInput.value.trim();
+    const password = hrPasswordInput.value;
 
-    if (!username) {
-      hrMessage.textContent = "Please enter your HR username or email.";
+    if (!username || !password) {
+      showMessage(hrMessage, "Please enter your username/email and password.");
       return;
     }
 
     hrSubmit.disabled = true;
-    hrMessage.textContent = "Signing in...";
+    showMessage(hrMessage, "Signing in...", true);
 
     try {
-      const data = await requestLogin({ role: "hr", username });
-      saveAuthenticatedUser(data);
-
-      if (data.user?.role === "Staff") {
-        throw new Error("This account is an employee account. Please use Employee Access.");
+      const data = await requestLogin(username, password);
+      if (!['Admin', 'Manager'].includes(data.user?.role)) {
+        clearAuthentication();
+        throw new Error("This account does not have HR access. Use Employee Access instead.");
       }
-
+      saveAuthenticatedUser(data);
       window.location.href = "index.html";
     } catch (error) {
+      clearAuthentication();
       console.error("HR login error:", error);
-      hrMessage.textContent = error.message || "Unable to sign in to the HR system.";
+      showMessage(hrMessage, error.message || "Unable to sign in to the HR system.");
     } finally {
       hrSubmit.disabled = false;
-      if (hrPasswordInput) hrPasswordInput.value = "";
+      hrPasswordInput.value = "";
     }
   });
 
   employeeForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-
     const employeeId = employeeIdInput.value.trim();
+    const password = employeePasswordInput.value;
 
-    if (!employeeId) {
-      employeeMessage.textContent = "Please enter your Employee ID.";
+    if (!employeeId || !password) {
+      showMessage(employeeMessage, "Please enter your Employee ID and password.");
       return;
     }
 
     employeeSubmit.disabled = true;
-    employeeMessage.textContent = "Verifying employee access...";
+    showMessage(employeeMessage, "Signing in...", true);
 
     try {
-      const data = await requestLogin({ role: "employee", employeeId });
-      saveAuthenticatedUser(data);
-
+      const data = await requestLogin(employeeId, password);
       if (data.user?.role !== "Staff") {
-        throw new Error("This Employee ID is not linked to an employee account.");
+        clearAuthentication();
+        throw new Error("This account is not an employee account.");
       }
-
+      if (String(data.user?.employeeId) !== String(employeeId)) {
+        clearAuthentication();
+        throw new Error("The Employee ID does not match this account.");
+      }
+      saveAuthenticatedUser(data);
       window.location.href = "employee.html";
     } catch (error) {
-      console.error("Employee access error:", error);
-      employeeMessage.textContent = error.message || "Unable to access the employee portal.";
+      clearAuthentication();
+      console.error("Employee login error:", error);
+      showMessage(employeeMessage, error.message || "Unable to access the employee portal.");
     } finally {
       employeeSubmit.disabled = false;
+      employeePasswordInput.value = "";
     }
   });
 })();
