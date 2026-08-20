@@ -8,6 +8,10 @@ import payrollRouter from "./routes/payroll.routes.js";
 import reviewRoutes from "./routes/reviews.routes.js";
 import attendanceRouter from "./routes/attendance.route.js";
 import calendarRouter from "./routes/calendar.routes.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
+import notificationsRouter from "./routes/notifications.routes.js";
+import settingsRouter from "./routes/settings.routes.js";
+import tasksRouter from "./routes/tasks.routes.js";
 
 dotenv.config();
 
@@ -26,6 +30,10 @@ app.use("/api/payroll", payrollRouter);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/attendance", attendanceRouter);
 app.use("/api/calendar", calendarRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/notifications", notificationsRouter);
+app.use("/api/settings", settingsRouter);
+app.use("/api/tasks", tasksRouter);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Modern Tech API is running" });
