@@ -1,5 +1,7 @@
+import fs from "node:fs";
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+
 
 dotenv.config();
 
@@ -11,8 +13,10 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
 
   ssl: {
-    rejectUnauthorized: false,
+    ca: fs.readFileSync(new URL("./ca.pem", import.meta.url)),
+    rejectUnauthorized: true,
   },
+
 
   waitForConnections: true,
   connectionLimit: 10,
