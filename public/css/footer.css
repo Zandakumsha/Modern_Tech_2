@@ -1,0 +1,162 @@
+/* =========================================================
+   Modern Tech HR — Shared Footer
+   Applies consistently across every HR-side page.
+   ========================================================= */
+
+main.main {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 1rem);
+}
+
+main.main > footer {
+  width: 100%;
+  flex: 0 0 auto;
+  margin-top: 4rem;
+  padding: 2.5rem 2rem 1.25rem;
+  background: var(--footer-color);
+  color: var(--footer-text);
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 24px var(--shadow-color);
+  overflow: hidden;
+}
+
+main.main > footer .footer_container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.35fr) repeat(3, minmax(150px, 1fr));
+  align-items: start;
+  gap: 2.5rem;
+}
+
+main.main > footer .footer_content,
+main.main > footer .footer-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+main.main > footer .footer_content i {
+  font-size: 2rem;
+  margin-bottom: 0.65rem;
+}
+
+main.main > footer .footer_content h2 {
+  margin-bottom: 0.55rem;
+  color: inherit;
+  font-size: 1.25rem;
+}
+
+main.main > footer .footer_content p {
+  max-width: 330px;
+  margin: 0;
+  line-height: 1.6;
+  color: var(--footer-text);
+  opacity: 0.9;
+}
+
+main.main > footer .footer-col h3 {
+  margin: 0 0 0.85rem;
+  color: inherit;
+  font-size: 1rem;
+}
+
+main.main > footer .footer-col ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+main.main > footer .footer-col li {
+  margin: 0;
+  line-height: 1.45;
+  color: var(--footer-text);
+}
+
+main.main > footer .footer-col li i {
+  margin-right: 0.4rem;
+}
+
+main.main > footer .footer-col a {
+  color: var(--footer-text);
+  opacity: 0.92;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+main.main > footer .footer-col a:hover {
+  color: var(--footer-text);
+  opacity: 1;
+}
+
+main.main > footer hr {
+  width: 100%;
+  max-width: 1400px;
+  margin: 2rem auto 1rem;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+main.main > footer .footer_copy {
+  width: 100%;
+  margin: 0;
+  padding: 0.25rem 0 0;
+  text-align: center;
+  color: var(--footer-text);
+  opacity: 0.9;
+  font-size: 0.82rem;
+}
+
+@media screen and (max-width: 900px) {
+  main.main > footer {
+    margin-top: 3rem;
+    padding: 2.25rem 1.5rem 1.15rem;
+  }
+
+  main.main > footer .footer_container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  main.main > footer {
+    margin-top: 2.5rem;
+    padding: 2rem 1.1rem 1rem;
+    border-radius: 22px 22px 0 0;
+  }
+
+  main.main > footer .footer_container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  main.main > footer .footer_content,
+  main.main > footer .footer-col {
+    align-items: center;
+    text-align: center;
+  }
+
+  main.main > footer .footer_content p {
+    max-width: 420px;
+  }
+
+  main.main > footer .footer-col ul {
+    justify-items: center;
+  }
+
+  main.main > footer hr {
+    margin-top: 1.5rem;
+  }
+}
+
+@media print {
+  main.main > footer {
+    display: none !important;
+  }
+}
