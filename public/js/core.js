@@ -91,7 +91,7 @@ function ensureNotificationsFooter() {
         <li><a href="payroll.html">Payroll</a></li>
         <li><a href="attendance.html">Attendance</a></li>
         <li><a href="calendar.html">Calendar</a></li>
-        <li><a href="notifications.html"><i class="ri-notification-3-fill"></i> Notifications</a></li>
+        <li><a href="notifications.html">Notifications</a></li>
         <li><a href="settings.html">Settings</a></li>
         <li><a href="reviews.html">Reviews</a></li>
       </ul></div>
