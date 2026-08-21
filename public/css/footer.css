@@ -1,5 +1,7 @@
 /* =========================================================
-   Modern Tech HR — Reviews-style shared footer
+   Modern Tech HR — Shared footer
+   Matches the employee portal footer styling.
+   Styling only: footer links/content are not changed here.
    ========================================================= */
 
 main.main {
@@ -13,139 +15,122 @@ main.main > .container:not(.s_wrap) {
   flex: 1 0 auto;
 }
 
+/* =========================
+   SHARED FOOTER
+========================= */
 main.main > footer {
   width: 100%;
   flex: 0 0 auto;
   margin-top: 2rem;
-  padding: 2.25rem 2rem 1.15rem;
-  background: var(--footer-color, var(--primary-color, #00674f));
-  color: #fff;
-  border-radius: 0;
+  background-color: var(--footer-color, var(--primary-color, #00674f));
+  color: var(--footer-text, #fff);
+  padding: 2rem 1.5rem;
+  border-top-left-radius: 90px;
   box-shadow: none;
   overflow: hidden;
+  font-size: var(--normal-font-size);
 }
 
 main.main > footer .footer_container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(220px, 1.35fr) repeat(3, minmax(150px, 1fr));
-  align-items: start;
-  gap: 2.5rem;
+  width: 85%;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
 }
 
 main.main > footer .footer_content,
 main.main > footer .footer-col {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  text-align: center;
 }
 
 main.main > footer .footer_content i {
   font-size: 2rem;
-  margin-bottom: .65rem;
-}
-
-main.main > footer .footer_content h2,
-main.main > footer .footer-col h3 {
-  color: #fff;
-}
-
-main.main > footer .footer_content h2 {
-  margin: 0 0 .55rem;
-  font-size: 1.25rem;
-}
-
-main.main > footer .footer_content p,
-main.main > footer .footer-col li,
-main.main > footer .footer-col a,
-main.main > footer .footer_copy {
-  color: #fff;
-}
-
-main.main > footer .footer_content p {
-  max-width: 330px;
-  margin: 0;
-  line-height: 1.6;
-  opacity: .9;
+  margin-bottom: 1rem;
 }
 
 main.main > footer .footer-col h3 {
-  margin: 0 0 .85rem;
-  font-size: 1rem;
+  margin-bottom: 1rem;
 }
 
 main.main > footer .footer-col ul {
-  display: grid;
-  gap: .45rem;
-  margin: 0;
   padding: 0;
-  list-style: none;
+  margin: 0;
 }
 
 main.main > footer .footer-col li {
-  margin: 0;
-  line-height: 1.45;
-  opacity: .92;
+  list-style: none;
+  margin-bottom: 0.5rem;
 }
 
-main.main > footer .footer-col li i {
-  margin-right: .4rem;
-}
-
+main.main > footer .footer-col li a,
 main.main > footer .footer-col a {
-  opacity: .92;
-  transition: opacity .2s ease;
+  color: var(--footer-text, #fff);
+  text-decoration: none;
 }
 
 main.main > footer .footer-col a:hover {
-  color: #fff;
-  opacity: 1;
-}
-
-/* Notifications remains a footer link, but has no notification icon. */
-main.main > footer a[href="notifications.html"] i {
-  display: none;
+  color: var(--footer-text, #fff);
 }
 
 main.main > footer hr {
   width: 100%;
-  max-width: 1400px;
-  margin: 2rem auto 1rem;
-  border: 0;
-  border-top: 1px solid rgba(255,255,255,.3);
+  margin: 2rem 0 1rem;
+  border: none;
+  border-top: 1px solid var(--footer-text, #fff);
 }
 
 main.main > footer .footer_copy {
+  display: block;
   width: 100%;
-  margin: 0;
-  padding: .25rem 0 0;
   text-align: center;
-  opacity: .9;
-  font-size: .82rem;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
 }
 
 @media screen and (max-width: 900px) {
-  main.main > footer { padding: 2.25rem 1.5rem 1.15rem; }
+  main.main > footer {
+    padding: 2rem 1.5rem;
+  }
+
   main.main > footer .footer_container {
+    width: 100%;
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2rem 1.5rem;
   }
 }
 
 @media screen and (max-width: 600px) {
-  main.main > footer { padding: 2rem 1.1rem 1rem; }
-  main.main > footer .footer_container { grid-template-columns: 1fr; gap: 1.5rem; }
+  main.main > footer {
+    padding: 2rem 1.1rem;
+    border-top-left-radius: 60px;
+  }
+
+  main.main > footer .footer_container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
   main.main > footer .footer_content,
-  main.main > footer .footer-col { align-items: center; text-align: center; }
-  main.main > footer .footer_content p { max-width: 420px; }
-  main.main > footer .footer-col ul { justify-items: center; }
-  main.main > footer hr { margin-top: 1.5rem; }
+  main.main > footer .footer-col {
+    align-items: center;
+    text-align: center;
+  }
+
+  main.main > footer hr {
+    margin-top: 1.5rem;
+  }
 }
 
 @media print {
-  main.main > footer { display: none !important; }
+  main.main > footer {
+    display: none !important;
+  }
 }
