@@ -16,7 +16,7 @@ export const getReviews = async (req, res) => {
 export const addReview = async(req, res) => {
     try {
         const result = await createReview(req.body) ;
-        res.status(201).json({message: "Review added succesfully", id: result.InsertId});
+        res.status(201).json({message: "Review added succesfully", id: result.insertId});
     
     } catch (error) {
         console.error("Error adding review:", error);
