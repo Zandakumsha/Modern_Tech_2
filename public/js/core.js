@@ -65,12 +65,24 @@ function ensureNotificationsNavigation() {
   document.querySelectorAll('.sidebar__list a[href="notifications.html"]').forEach((link) => { if (window.location.pathname.endsWith("/notifications.html")) link.classList.add("active-link"); });
 }
 
-/*=============== STANDARD ATTENDANCE FOOTER ===============*/
+/*=============== STANDARD HR FOOTER ===============*/
 function ensureNotificationsFooter() {
-  // The login page intentionally has no footer.
   if (document.body.classList.contains("login-page") || window.location.pathname.endsWith("/login.html")) return;
+
+  // Load the shared footer stylesheet once so every HR page uses the same layout.
+  if (!document.querySelector('link[data-hr-footer-style]')) {
+    const footerStyle = document.createElement("link");
+    footerStyle.rel = "stylesheet";
+    footerStyle.href = "css/footer.css";
+    footerStyle.dataset.hrFooterStyle = "true";
+    document.head.appendChild(footerStyle);
+  }
+
   let footer = document.querySelector("footer");
-  if (!footer) { footer = document.createElement("footer"); document.body.appendChild(footer); }
+  const main = document.querySelector("main.main");
+  if (!footer) footer = document.createElement("footer");
+  if (main && footer.parentElement !== main) main.appendChild(footer);
+
   footer.innerHTML = `
     <div class="footer_container">
       <div class="footer_content"><i class="ri-cloud-fill"></i><h2>Modern Tech</h2><p>Modern Technology Solutions is a leading provider of HR management solutions.</p></div>
@@ -78,7 +90,7 @@ function ensureNotificationsFooter() {
         <li><a href="index.html">Dashboard</a></li><li><a href="data.html">Employees</a></li><li><a href="payroll.html">Payroll</a></li><li><a href="attendance.html">Attendance</a></li><li><a href="calendar.html">Calendar</a></li><li><a href="notifications.html"><i class="ri-notification-3-fill"></i> Notifications</a></li>
       </ul></div>
       <div class="footer-col"><h3>Contact Us</h3><ul>
-        <li><i class="ri-mail-fill"></i> info@modern-tech.com</li><li><i class="ri-phone-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne 7780</li>
+        <li><i class="ri-mail-fill"></i> info@modern-tech.com</li><li><i class="ri-phone-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne 7780</li>
       </ul></div>
       <div class="footer-col"><h3>Follow Us</h3><ul><li><i class="ri-github-fill"></i><a href="#">Github</a></li><li><i class="ri-linkedin-fill"></i><a href="#">LinkedIn</a></li></ul></div>
     </div>
@@ -97,7 +109,7 @@ if (logoutBtn) logoutBtn.addEventListener("click", () => { sessionStorage.remove
 document.addEventListener("DOMContentLoaded", () => {
   ensureNotificationsNavigation(); ensureNotificationsFooter(); syncProfileInfo();
   const darkModeToggle = document.getElementById("darkModeToggle");
-  if (darkModeToggle) { darkModeToggle.checked = document.body.classList.contains("dark-theme"); darkModeToggle.addEventListener("change", () => { document.body.classList.toggle("dark-theme", darkModeToggle.checked); localStorage.setItem("selected-theme", document.body.classList.contains("dark-theme") ? "dark" : "light"); localStorage.setItem("selected-icon", document.body.classList.contains("dark-theme") ? "ri-moon-clear-fill" : "ri-sun-fill"); if (themeButton) { themeButton.classList.toggle("ri-sun-fill", !darkModeToggle.checked); themeButton.classList.toggle("ri-moon-clear-fill", darkModeToggle.checked); } }); }
+  if (darkModeToggle) { darkModeToggle.checked = document.body.classList.contains(darkTheme); darkModeToggle.addEventListener("change", () => { document.body.classList.toggle("dark-theme", darkModeToggle.checked); localStorage.setItem("selected-theme", document.body.classList.contains("dark-theme") ? "dark" : "light"); localStorage.setItem("selected-icon", document.body.classList.contains("dark-theme") ? "ri-moon-clear-fill" : "ri-sun-fill"); if (themeButton) { themeButton.classList.toggle("ri-sun-fill", !darkModeToggle.checked); themeButton.classList.toggle("ri-moon-clear-fill", darkModeToggle.checked); } }); }
   ["emailNotifications", "pushNotifications", "attendanceAlerts"].forEach((id) => { const toggle = document.getElementById(id); if (!toggle) return; const savedValue = localStorage.getItem(id); if (savedValue !== null) toggle.checked = savedValue === "true"; toggle.addEventListener("change", () => localStorage.setItem(id, toggle.checked.toString())); });
 });
 
