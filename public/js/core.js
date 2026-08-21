@@ -69,7 +69,6 @@ function ensureNotificationsNavigation() {
 function ensureNotificationsFooter() {
   if (document.body.classList.contains("login-page") || window.location.pathname.endsWith("/login.html")) return;
 
-  // Load the shared footer stylesheet once so every HR page uses the same layout.
   if (!document.querySelector('link[data-hr-footer-style]')) {
     const footerStyle = document.createElement("link");
     footerStyle.rel = "stylesheet";
@@ -87,7 +86,14 @@ function ensureNotificationsFooter() {
     <div class="footer_container">
       <div class="footer_content"><i class="ri-cloud-fill"></i><h2>Modern Tech</h2><p>Modern Technology Solutions is a leading provider of HR management solutions.</p></div>
       <div class="footer-col"><h3>Links</h3><ul>
-        <li><a href="index.html">Dashboard</a></li><li><a href="data.html">Employees</a></li><li><a href="payroll.html">Payroll</a></li><li><a href="attendance.html">Attendance</a></li><li><a href="calendar.html">Calendar</a></li><li><a href="notifications.html"><i class="ri-notification-3-fill"></i> Notifications</a></li>
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="data.html">Employees Data</a></li>
+        <li><a href="payroll.html">Payroll</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="calendar.html">Calendar</a></li>
+        <li><a href="notifications.html"><i class="ri-notification-3-fill"></i> Notifications</a></li>
+        <li><a href="settings.html">Settings</a></li>
+        <li><a href="reviews.html">Reviews</a></li>
       </ul></div>
       <div class="footer-col"><h3>Contact Us</h3><ul>
         <li><i class="ri-mail-fill"></i> info@modern-tech.com</li><li><i class="ri-phone-fill"></i> +1 234 567 890</li><li><i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne 7780</li>
