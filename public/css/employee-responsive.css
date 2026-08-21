@@ -1,0 +1,178 @@
+/* =========================================================
+   Modern Tech - Employee Portal Responsive Overrides
+   Loaded after the shared and employee page styles.
+   Keeps the employee portal usable from desktop to small phones.
+   ========================================================= */
+
+/* The employee page contains two main children: the profile card
+   and the files/account column. Keep those in two columns on desktop
+   instead of leaving an unused third grid column. */
+.emp-main-layout {
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+}
+
+.emp-main-layout > *,
+.emp-profile-card > *,
+.emp-files-col,
+.emp-card,
+.emp-bottom-card {
+  min-width: 0;
+}
+
+.emp-page,
+.emp-page-header,
+.emp-crumbrow,
+.emp-summary-grid {
+  min-width: 0;
+}
+
+@media (max-width: 1149px) {
+  .emp-page {
+    max-width: 100%;
+  }
+
+  .emp-main-layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+  }
+}
+
+@media (max-width: 950px) {
+  .emp-main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-files-col {
+    grid-column: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .emp-page {
+    padding-inline: 0;
+  }
+
+  .emp-page-header-actions {
+    width: 100%;
+  }
+
+  .emp-header-action {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  .emp-profile-card {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .emp-files-col {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-summary-card {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 650px) {
+  .emp-page-header {
+    gap: .9rem;
+  }
+
+  .emp-page-header-actions .emp-header-action {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .emp-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-profile-card {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-profile-right {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-crumbrow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .emp-crumb-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .emp-bottom-hd {
+    align-items: stretch;
+  }
+
+  .emp-tab-btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .emp-page {
+    padding-top: .75rem;
+    padding-bottom: 2rem;
+  }
+
+  .emp-page-header h1 {
+    font-size: clamp(1.5rem, 9vw, 2rem);
+  }
+
+  .emp-page-subtitle {
+    font-size: .85rem;
+  }
+
+  .emp-card,
+  .emp-summary-card {
+    padding: .9rem;
+  }
+
+  .emp-my-leave-list {
+    padding-inline: .75rem;
+  }
+
+  .emp-modal {
+    padding: .5rem;
+  }
+
+  .emp-modal-box,
+  .emp-modal-content {
+    max-height: calc(100vh - 1rem);
+    padding: 1rem;
+  }
+
+  .emp-form-actions {
+    flex-direction: column;
+  }
+
+  .emp-form-actions > * {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .emp-page-header-actions {
+    gap: .5rem;
+  }
+
+  .emp-summary-card {
+    gap: .65rem;
+  }
+
+  .emp-summary-icon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .emp-bottom-hd {
+    gap: .5rem;
+  }
+}
