@@ -79,6 +79,13 @@ main.main > footer .footer-col a:hover {
   color: var(--footer-text, #fff);
 }
 
+/* Hide only the notification icon in the footer.
+   The Notifications link itself remains unchanged. */
+main.main > footer a[href="notifications.html"] > i,
+main.main > footer a[href="notifications.html"] i {
+  display: none !important;
+}
+
 main.main > footer hr {
   width: 100%;
   margin: 2rem 0 1rem;
