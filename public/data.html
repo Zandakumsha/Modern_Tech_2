@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Data | Modern Tech</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!--=============== REMIXICONS ===============-->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!--=============== HEADER ===============-->
+    <header class="header" id="header">
+      <div class="header__container">
+        <a href="#" class="header__logo">
+          <i class="ri-cloud-fill"></i>
+          <span>Modern Tech</span>
+        </a>
+
+        <div class="header__toggle" id="header-toggle">
+          <i class="ri-menu-line"></i>
+        </div>
+      </div>
+    </header>
+
+    <!--=============== SIDEBAR ===============-->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar__container">
+        <div class="sidebar__user">
+          <div class="sidebar__img">
+            <img
+              id="navbarProfileImage"
+              src="https://i.ibb.co/gF6c7Yj8/Make-Something-Special-with-our-Adorable-Craft.jpg"
+              alt="Profile Avatar"
+            />
+          </div>
+
+          <div class="sidebar__info">
+            <h3 id="sidebar-user-name">User</h3>
+            <span id="sidebar-user-email">user@email.com</span>
+            <span class="user-profile" id="sidebar_role">Admin</span>
+          </div>
+        </div>
+
+        <div class="sidebar__content">
+          <div>
+            <h3 class="sidebar__title">MANAGE</h3>
+
+            <div class="sidebar__list">
+              <a href="index.html" class="sidebar__link">
+                <i class="ri-pie-chart-2-fill"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a href="data.html" class="sidebar__link active-link">
+                <i class="ri-team-fill"></i>
+                <span>Employees Data</span>
+              </a>
+
+              <a href="payroll.html" class="sidebar__link">
+                <i class="ri-secure-payment-fill"></i>
+                <span>Payroll</span>
+              </a>
+
+              <a href="attendance.html" class="sidebar__link">
+                <i class="ri-calendar-event-fill"></i>
+                <span>Attendance</span>
+              </a>
+
+              <a href="calendar.html" class="sidebar__link">
+                <i class="ri-calendar-fill"></i>
+                <span>Calendar</span>
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="sidebar__title">SETTINGS</h3>
+
+            <div class="sidebar__list">
+              <a href="settings.html" class="sidebar__link">
+                <i class="ri-settings-3-fill"></i>
+                <span>Settings</span>
+              </a>
+
+              <a href="reviews.html" class="sidebar__link">
+                <i class="ri-mail-unread-fill"></i>
+                <span>Reviews</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar__actions">
+          <div class="sidebar__theme-selector">
+            <i
+              class="ri-moon-clear-fill sidebar__link sidebar__theme"
+              id="theme-button"
+            >
+              <span>Theme</span>
+            </i>
+          </div>
+
+          <div class="sidebar__link" id="logout-btn">
+            <i class="ri-logout-box-r-fill"></i>
+            <span>Log Out</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main container" id="main">
+      <h1 class="employee-heading">Employee Data</h1>
+      <!-- The search, filter dropdown and an "add employee" button -->
+      <div class="n-buttons">
+        <label for="searchName">
+          <input
+            id="searchName"
+            name="searchName"
+            type="text"
+            placeholder="Search by name..."
+            required
+          />
+        </label>
+
+        <select id="n-departmentFilter">
+          <option>All Departments</option>
+          <option>Development</option>
+          <option>HR</option>
+          <option>QA</option>
+          <option>Sales</option>
+          <option>Marketing</option>
+          <option>Design</option>
+          <option>IT</option>
+          <option>Finance</option>
+          <option>Support</option>
+        </select>
+
+        <button id="n-addEmployee">Add employee</button>
+      </div>
+
+      <p id="n-resultsCount">Showing 10 of 10 employees</p>
+
+      <div class="employeeData">
+        <!-- A table containing all employees data -->
+        <table id="n-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Department</th>
+              <th>Salary</th>
+              <th>Contact</th>
+              <th>Action</th>
+              <!--For viewing more details about the employee-->
+            </tr>
+          </thead>
+
+          <tbody id="employeeTable"></tbody>
+        </table>
+      </div>
+
+      <div id="n-viewModal">
+        <div class="n-modalBox">
+          <!-- Header -->
+          <div class="n-modalHeader">
+            <h2 id="n-modalName"></h2>
+            <button id="n-closeModal">✕</button>
+          </div>
+
+          <div id="n-viewDetails">
+            <!-- Personal Info -->
+            <div class="modal-section">
+              <h3>Personal Info</h3>
+              <p id="n-modalId"></p>
+              <p id="n-modalContact"></p>
+            </div>
+
+            <!-- Employment History -->
+            <div class="modal-section">
+              <h3>Employment History</h3>
+              <p id="n-modalPosition"></p>
+              <p id="n-modalDepartment"></p>
+              <p id="n-modalHistory"></p>
+            </div>
+
+            <!-- Salary Details -->
+            <div class="modal-section">
+              <h3>Salary Details</h3>
+              <p id="n-modalSalary"></p>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="modal-footer">
+              <button id="editEmployee">Edit</button>
+              <button id="deleteEmployee">Delete</button>
+            </div>
+          </div>
+
+          <!-- Edit Form (hidden by default) -->
+          <div id="n-editForm" style="display: none">
+            <h3>Edit Employee</h3>
+            <label
+              >Name<input
+                id="edit-name"
+                type="text"
+                placeholder="employee name"
+            /></label>
+            <label
+              >Email<input
+                id="edit-contact"
+                type="email"
+                placeholder="employee@gmail.com"
+            /></label>
+            <label
+              >Position<input
+                id="edit-position"
+                type="text"
+                placeholder="manager .etc"
+            /></label>
+            <label
+              >Department
+              <select id="edit-department">
+                <option>Development</option>
+                <option>HR</option>
+                <option>QA</option>
+                <option>Sales</option>
+                <option>Marketing</option>
+                <option>Design</option>
+                <option>IT</option>
+                <option>Finance</option>
+                <option>Support</option>
+              </select>
+            </label>
+            <label>History<input id="edit-history" type="text" /></label>
+            <label
+              >Salary<input id="edit-salary" type="number" required
+            /></label>
+            <div class="modal-footer">
+              <button id="saveEmployee">Save</button>
+              <button id="cancelEdit">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Footer -->
+
+      <footer>
+        <div class="footer_container">
+          <div class="footer_content">
+            <i class="ri-cloud-fill"></i>
+            <h2>Modern Tech</h2>
+            <p>
+              Modern Technology Solutions is a leading provider of HR management
+              solutions.
+            </p>
+          </div>
+
+          <div class="footer-col">
+            <h3>Links</h3>
+            <ul>
+              <li><a href="index.html">Dashboard</a></li>
+              <li><a href="data.html">Employees</a></li>
+              <li><a href="payroll.html">Payroll</a></li>
+              <li><a href="attendance.html">Attendance</a></li>
+              <li><a href="calendar.html">Calendar</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Contact Us</h3>
+            <ul>
+              <li><i class="ri-mail-fill"></i> info@modern-tech.com</li>
+              <li><i class="ri-phone-fill"></i> +1 234 567 890</li>
+              <li>
+                <i class="ri-map-pin-fill"></i> 314 Imam Haron Road, Lansdowne
+                7780
+              </li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h3>Follow Us</h3>
+            <ul>
+              <li>
+                <i class="ri-github-fill"></i>
+                <a href="#">Github</a>
+              </li>
+              <li>
+                <i class="ri-linkedin-fill"></i>
+                <a href="#">LinkedIn</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <hr />
+
+        <p class="footer_copy">&copy; 2024 Modern Tech. All rights reserved.</p>
+      </footer>
+    </main>
+
+    <!-- Toast notification - pops up briefly to show success/error messages -->
+    <div id="toast" style="display: none">
+      <span id="toast-message"></span>
+    </div>
+
+    <script src="js/core.js"></script>
+    <script src="js/employees.js"></script>
+  </body>
+</html>

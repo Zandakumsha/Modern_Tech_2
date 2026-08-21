@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <title>Modern Tech | HR & Employee Access</title>
+    <style>
+      .login_message { min-height: 22px; margin: 12px 0 0; font-size: 0.9rem; text-align: center; }
+      .login_form-subtitle { text-align: center; margin: -8px 0 22px; color: #777; }
+      .login_security-note { margin: 18px 0 0; font-size: 0.78rem; color: #777; line-height: 1.5; text-align: center; }
+      .login_error { color: #b91c1c; }
+      .login_success { color: #15803d; }
+      @media (max-width: 870px) { .login_form-subtitle { margin-bottom: 16px; } .login_security-note { display: none; } }
+    </style>
+  </head>
+  <body class="login-page">
+    <div class="login_container">
+      <div class="login_forms-container">
+        <div class="login_signin-signup">
+          <form action="#" class="login_sign-in-form" id="login-auth-form" novalidate>
+            <h2 class="login_title">HR Login</h2>
+            <p class="login_form-subtitle">Sign in to the Modern Tech HR management system</p>
+            <div class="login_input-field"><i class="fas fa-user-tie"></i><input id="login-hr-username" type="text" autocomplete="username" placeholder="HR username or email" required /></div>
+            <div class="login_input-field"><i class="fas fa-lock"></i><input id="login-password" type="password" autocomplete="current-password" placeholder="Password" minlength="6" required /></div>
+            <input id="login-submit" type="submit" value="Login to HR" class="login_btn login_solid" />
+            <p id="login-message" class="login_message" aria-live="polite"></p>
+            <p class="login_security-note">HR credentials are verified securely by the server.</p>
+          </form>
+
+          <form action="#" class="login_sign-up-form" id="employee-auth-form" novalidate>
+            <h2 class="login_title">Employee Access</h2>
+            <p class="login_form-subtitle">Enter your Employee ID to access your portal</p>
+            <div class="login_input-field"><i class="fas fa-id-badge"></i><input id="login-employee-id" type="text" inputmode="numeric" autocomplete="username" placeholder="Employee ID" required /></div>
+            <input id="employee-submit" type="submit" class="login_btn" value="Employee Portal" />
+            <p id="employee-message" class="login_message" aria-live="polite"></p>
+            <p class="login_security-note">Your Employee ID is used to identify your employee account.</p>
+          </form>
+        </div>
+      </div>
+
+      <div class="login_panels-container">
+        <div class="login_panel login_left-panel">
+          <div class="login_content">
+            <h3>Employee?</h3>
+            <p>Access your employee portal using your Employee ID.</p>
+            <button class="login_btn login_transparent" id="login_sign-up-btn" type="button">Access</button>
+          </div>
+        </div>
+        <div class="login_panel login_right-panel">
+          <div class="login_content">
+            <h3>HR Team?</h3>
+            <p>Login to manage employees, attendance, payroll and more.</p>
+            <button class="login_btn login_transparent" id="login_sign-in-btn" type="button">HR Login</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/core.js"></script>
+    <script src="js/login.js"></script>
+  </body>
+</html>

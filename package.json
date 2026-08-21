@@ -1,0 +1,29 @@
+{
+  "name": "modern_tech_2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+    
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zandakumsha/Modern_Tech_2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Zandakumsha/Modern_Tech_2/issues"
+  },
+  "homepage": "https://github.com/Zandakumsha/Modern_Tech_2#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.3"
+  }
+}

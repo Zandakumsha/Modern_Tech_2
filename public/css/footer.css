@@ -1,0 +1,145 @@
+@import url("responsive.css");
+
+/* =========================================================
+   Modern Tech HR — Shared footer
+   Matches the employee portal footer styling.
+   Styling only: footer links/content are not changed here.
+   ========================================================= */
+
+main.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main.main > .attendance_container,
+main.main > .container:not(.s_wrap) {
+  flex: 1 0 auto;
+}
+
+/* =========================
+   SHARED FOOTER
+========================= */
+main.main > footer {
+  width: 100%;
+  flex: 0 0 auto;
+  margin-top: 2rem;
+  background-color: var(--footer-color, var(--primary-color, #00674f));
+  color: var(--footer-text, #fff);
+  padding: 2rem 1.5rem;
+  border-top-left-radius: 90px;
+  box-shadow: none;
+  overflow: hidden;
+  font-size: var(--normal-font-size);
+}
+
+main.main > footer .footer_container {
+  width: 85%;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+main.main > footer .footer_content,
+main.main > footer .footer-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+main.main > footer .footer_content i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+main.main > footer .footer-col h3 {
+  margin-bottom: 1rem;
+}
+
+main.main > footer .footer-col ul {
+  padding: 0;
+  margin: 0;
+}
+
+main.main > footer .footer-col li {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+
+main.main > footer .footer-col li a,
+main.main > footer .footer-col a {
+  color: var(--footer-text, #fff);
+  text-decoration: none;
+}
+
+main.main > footer .footer-col a:hover {
+  color: var(--footer-text, #fff);
+}
+
+/* Hide only the notification icon in the footer.
+   The Notifications link itself remains unchanged. */
+main.main > footer a[href="notifications.html"] > i,
+main.main > footer a[href="notifications.html"] i {
+  display: none !important;
+}
+
+main.main > footer hr {
+  width: 100%;
+  margin: 2rem 0 1rem;
+  border: none;
+  border-top: 1px solid var(--footer-text, #fff);
+}
+
+main.main > footer .footer_copy {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+}
+
+@media screen and (max-width: 900px) {
+  main.main > footer {
+    padding: 2rem 1.5rem;
+  }
+
+  main.main > footer .footer_container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 1.5rem;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  main.main > footer {
+    padding: 2rem 1.1rem;
+    border-top-left-radius: 60px;
+  }
+
+  main.main > footer .footer_container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  main.main > footer .footer_content,
+  main.main > footer .footer-col {
+    align-items: center;
+    text-align: center;
+  }
+
+  main.main > footer hr {
+    margin-top: 1.5rem;
+  }
+}
+
+@media print {
+  main.main > footer {
+    display: none !important;
+  }
+}
