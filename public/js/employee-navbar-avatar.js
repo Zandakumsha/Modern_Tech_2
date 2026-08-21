@@ -29,21 +29,11 @@
     }
   };
 
-  const renderEmployeeFallback = () => {
+  const renderEmployeeInitials = () => {
     const name = getEmployeeName();
     const initials = getInitials(name);
 
     document.querySelectorAll(".emp-avatar-photo").forEach((avatar) => {
-      // employee-profile.js owns the actual avatar image. Never replace a
-      // loaded image with initials, because that prevents the selected/stored
-      // employee avatar from remaining visible in the sidebar.
-      const existingImage = avatar.querySelector("img");
-      if (existingImage?.getAttribute("src")) {
-        avatar.setAttribute("aria-label", `${name} profile avatar`);
-        avatar.setAttribute("title", name);
-        return;
-      }
-
       avatar.replaceChildren();
       avatar.textContent = initials;
       avatar.setAttribute("aria-label", `${name} initials`);
@@ -52,14 +42,16 @@
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    renderEmployeeFallback();
+    renderEmployeeInitials();
 
     ["sidebar-user-name", "emp-profile-name"].forEach((id) => {
       const nameElement = document.getElementById(id);
       if (!nameElement) return;
 
       const observer = new MutationObserver(() => {
-        queueMicrotask(renderEmployeeFallback);
+        // Wait until employee-profile.js has finished rendering before
+        // replacing any avatar image with the employee's initials.
+        queueMicrotask(renderEmployeeInitials);
       });
 
       observer.observe(nameElement, {
