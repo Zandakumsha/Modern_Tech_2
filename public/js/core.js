@@ -1,5 +1,60 @@
 /* Modern Tech shared HR client utilities */
-const showSidebar=(toggleId,sidebarId,headerId,mainId)=>{const toggle=document.getElementById(toggleId),sidebar=document.getElementById(sidebarId),header=document.getElementById(headerId),main=document.getElementById(mainId);if(!toggle||!sidebar)return;const mobile=()=>window.innerWidth<=900;const close=()=>{sidebar.classList.remove("show-sidebar");header?.classList.remove("left-pd");main?.classList.remove("left-pd");toggle.setAttribute("aria-expanded","false");};toggle.setAttribute("role","button");toggle.setAttribute("tabindex","0");toggle.setAttribute("aria-controls",sidebarId);toggle.setAttribute("aria-expanded","false");const toggleMenu=()=>{if(!mobile()){close();return}const open=sidebar.classList.toggle("show-sidebar");header?.classList.toggle("left-pd",open);main?.classList.toggle("left-pd",open);toggle.setAttribute("aria-expanded",open?"true":"false");};toggle.addEventListener("click",toggleMenu);toggle.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleMenu()}});document.addEventListener("click",e=>{if(mobile()&&sidebar.classList.contains("show-sidebar")&&!sidebar.contains(e.target)&&!toggle.contains(e.target))close()});document.querySelectorAll(".sidebar__list a").forEach(link=>link.addEventListener("click",()=>{if(mobile())close()}));window.addEventListener("resize",()=>{if(!mobile())close()});};
+const showSidebar=(toggleId,sidebarId,headerId,mainId)=>{
+  const toggle=document.getElementById(toggleId);
+  const sidebar=document.getElementById(sidebarId);
+  const header=document.getElementById(headerId);
+  const main=document.getElementById(mainId);
+  if(!toggle||!sidebar)return;
+
+  const mobile=()=>window.innerWidth<=900;
+  const setExpanded=expanded=>{
+    toggle.setAttribute("aria-expanded",String(expanded));
+    toggle.setAttribute("aria-label",expanded?"Close navigation menu":"Open navigation menu");
+    const icon=toggle.querySelector("i");
+    if(icon){
+      icon.classList.toggle("ri-menu-line",!expanded);
+      icon.classList.toggle("ri-close-line",expanded);
+    }
+  };
+  const close=()=>{
+    sidebar.classList.remove("show-sidebar");
+    header?.classList.remove("left-pd");
+    main?.classList.remove("left-pd");
+    setExpanded(false);
+  };
+  toggle.setAttribute("role","button");
+  toggle.setAttribute("tabindex","0");
+  toggle.setAttribute("aria-controls",sidebarId);
+  setExpanded(false);
+
+  const toggleMenu=()=>{
+    const expanded=!sidebar.classList.contains("show-sidebar");
+    sidebar.classList.toggle("show-sidebar",expanded);
+    header?.classList.toggle("left-pd",expanded);
+    main?.classList.toggle("left-pd",expanded);
+    setExpanded(expanded);
+  };
+
+  toggle.addEventListener("click",toggleMenu);
+  toggle.addEventListener("keydown",event=>{
+    if(event.key==="Enter"||event.key===" "){
+      event.preventDefault();
+      toggleMenu();
+    }
+    if(event.key==="Escape")close();
+  });
+  document.addEventListener("click",event=>{
+    if(mobile()&&sidebar.classList.contains("show-sidebar")&&!sidebar.contains(event.target)&&!toggle.contains(event.target))close();
+  });
+  document.querySelectorAll(".sidebar__list a").forEach(link=>link.addEventListener("click",()=>{if(mobile())close()}));
+  window.addEventListener("resize",()=>{
+    if(!mobile()) {
+      // Desktop uses the same control to collapse/expand the sidebar.
+      return;
+    }
+    close();
+  });
+};
 showSidebar("header-toggle","sidebar","header","main");
 const currentPage=window.location.pathname.split("/").pop()||"index.html";
 const HR_PAGES=["index.html","data.html","payroll.html","attendance.html","calendar.html","notifications.html","settings.html","reviews.html"];
