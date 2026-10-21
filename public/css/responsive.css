@@ -656,3 +656,30 @@ span {
     min-height: 55px !important;
   }
 }
+
+
+/* Final responsive and accessible login refinements */
+.login-page { min-height: 100vh; padding: 24px; }
+.login_container { width: min(100%, 1100px); min-height: 620px; margin: 0 auto; overflow: hidden; }
+.login_forms-container, .login_panels-container { min-width: 0; }
+.login_signin-signup { width: 100%; }
+.login_input-field { min-width: 0; }
+.login_input-field input { min-width: 0; width: 100%; }
+.login_btn { min-height: 46px; }
+.login_btn:focus-visible { outline: 3px solid #66cdb1; outline-offset: 3px; }
+.login_message { overflow-wrap: anywhere; }
+@media (max-width: 870px) {
+  .login-page { padding: 16px; }
+  .login_container { min-height: 0; }
+  .login_forms-container { padding: 24px 18px; }
+  .login_panels-container { display: none; }
+  .login_signin-signup { position: static; display: flex; flex-direction: column; gap: 30px; transform: none !important; }
+  .login_sign-in-form, .login_sign-up-form { width: 100%; max-width: 440px; margin: 0 auto; position: static; opacity: 1; pointer-events: auto; }
+}
+@media (max-width: 480px) {
+  .login-page { padding: 8px; }
+  .login_container { border-radius: 18px; }
+  .login_forms-container { padding: 20px 14px; }
+  .login_title { font-size: 1.6rem; }
+  .login_input-field { height: 48px; }
+}
