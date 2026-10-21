@@ -21,11 +21,11 @@ export async function createEvent(req, res) {
   const description = String(body.description ?? "").trim();
   const dateValue = new Date(date + "T00:00:00Z");
 
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date) || Number.isNaN(dateValue.getTime()) || dateValue.toISOString().slice(0, 10) !== date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(dateValue.getTime()) || dateValue.toISOString().slice(0, 10) !== date) {
     return res.status(400).json({ error: "A valid event date is required." });
   }
   if (!title || title.length > 200) return res.status(400).json({ error: "Enter an event title of 1–200 characters." });
-  if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(time)) return res.status(400).json({ error: "A valid event time is required." });
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return res.status(400).json({ error: "A valid event time is required." });
   if (!["Work", "Personal", "Urgent"].includes(category)) return res.status(400).json({ error: "Invalid event category." });
 
   try {
