@@ -32,7 +32,7 @@ function publicUser(user) {
 
 function createToken(user, extraClaims = {}) {
   if (!JWT_SECRET) throw new Error("JWT_SECRET is not configured");
-  return jwt.sign({ userId: user.userId, employeeId: user.employeeId, role: user.role, email: user.email, ...extraClaims }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
+  return jwt.sign({ userId: user.userId, employeeId: user.employeeId, username: user.username, role: user.role, email: user.email, ...extraClaims }, JWT_SECRET, { expiresIn: TOKEN_EXPIRES_IN });
 }
 
 function validateIdentifier(value) {
