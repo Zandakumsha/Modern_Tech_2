@@ -66,3 +66,29 @@
 @media(max-width:1150px){.dashboard_task-item{grid-template-columns:28px 105px 1.3fr 95px 105px 125px 50px 88px}.dashboard_section-content::before{font-size:9px;padding-left:18px}.dashboard_task-badge{padding:8px 10px;font-size:12px}.dashboard_task-action-btn{width:32px;height:32px;font-size:15px}}
 @media(max-width:780px){.dashboard_section-content{overflow-x:auto}.dashboard_section-content::before{min-width:860px}.dashboard_task-item{min-width:860px;grid-template-columns:30px 115px 170px 120px 120px 140px 58px 104px}.dashboard_section-content .dashboard_section-header{min-width:860px}}
 @media(max-width:520px){.dashboard_modal{padding:14px}.dashboard_modal-content{padding:22px;border-radius:16px}.dashboard_modal-actions{flex-direction:column-reverse}.dashboard_btn{width:100%}}
+
+
+/* Dashboard polish: keep tables and analytics usable at every viewport */
+.dashboard_section, .dashboard_section-layout, .dashboard_left-panel, .dashboard_main-content { min-width: 0; }
+.dashboard_section-content { max-width: 100%; border-radius: 16px; }
+.dashboard-analytics { min-width: 0; }
+.analytics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.chart-card { min-width: 0; overflow: hidden; background: var(--card-bg, #fff); border: 1px solid var(--border-color, #dce7e3); border-radius: 20px; padding: 1.25rem; box-shadow: 0 8px 24px var(--shadow-color, rgba(20,54,45,.1)); }
+.chart-card canvas { max-width: 100%; }
+.chart-card.wide { grid-column: 1 / -1; }
+.dashboard_modal { padding: 20px; }
+.dashboard_modal-content { max-height: calc(100vh - 40px); overflow-y: auto; }
+.dashboard_form-group input, .dashboard_form-group select, .dashboard_form-group textarea { width: 100%; min-width: 0; }
+@media (max-width: 900px) {
+  .analytics-grid { grid-template-columns: minmax(0, 1fr); }
+  .chart-card.wide { grid-column: auto; }
+  .dashboard_section-layout { display: block; }
+}
+@media (max-width: 520px) {
+  .dashboard_title-row { align-items: stretch; }
+  .dashboard_title-row h1 { font-size: 1.35rem; }
+  .dashboard_add-btn { width: 100%; }
+  .dashboard_sidebar-section { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard_modal { padding: 8px; }
+  .dashboard_modal-content { padding: 18px; }
+}
