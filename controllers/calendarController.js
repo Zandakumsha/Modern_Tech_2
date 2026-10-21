@@ -1,123 +1,60 @@
 import pool from "../config/db.js";
 
-async function resolveUserId({ userId, username, employeeId }) {
-  const numericUserId = Number(userId);
-  if (Number.isInteger(numericUserId) && numericUserId > 0) {
-    const [rows] = await pool.query("SELECT user_id FROM users WHERE user_id = ? LIMIT 1", [numericUserId]);
-    if (rows[0]) return rows[0].user_id;
-  }
-
-  if (employeeId) {
-    const numericEmployeeId = Number(employeeId);
-    if (Number.isInteger(numericEmployeeId) && numericEmployeeId > 0) {
-      const [rows] = await pool.query("SELECT user_id FROM users WHERE employee_id = ? LIMIT 1", [numericEmployeeId]);
-      if (rows[0]) return rows[0].user_id;
-    }
-  }
-
-  if (username) {
-    const cleanUsername = String(username).trim();
-    const [rows] = await pool.query("SELECT user_id FROM users WHERE username = ? OR email = ? LIMIT 1", [cleanUsername, cleanUsername]);
-    if (rows[0]) return rows[0].user_id;
-
-    const hrUsername = process.env.HR_USERNAME || "hrmanager";
-    if (cleanUsername.toLowerCase() === hrUsername.toLowerCase()) {
-      const [managerRows] = await pool.query("SELECT user_id FROM users WHERE role IN ('Manager', 'Admin') ORDER BY CASE WHEN role = 'Manager' THEN 0 ELSE 1 END, user_id LIMIT 1");
-      if (managerRows[0]) return managerRows[0].user_id;
-    }
-  }
-
-  return null;
+function ownerFor(req) {
+  const configured = String(process.env.HR_USERNAME || "").trim();
+  const supplied = String(req.body?.hr_username ?? req.query?.hr_username ?? req.user?.username ?? "").trim();
+  if (configured && supplied && supplied.toLowerCase() !== configured.toLowerCase()) return null;
+  return supplied || configured || null;
 }
-
-function getRequestIdentity(req) {
-  const body = req.body || {};
-  const query = req.query || {};
-  return {
-    userId: body.userId ?? query.userId,
-    username: body.username ?? query.username,
-    employeeId: body.employeeId ?? query.employeeId,
-  };
-}
+const fields = "SELECT event_id AS id, DATE_FORMAT(event_date, '%Y-%m-%d') AS eventDate, title, TIME_FORMAT(event_time, '%H:%i') AS time, category, description FROM calendar_events";
 
 export async function listEvents(req, res) {
+  const owner = ownerFor(req);
+  if (!owner) return res.status(400).json({ error: "HR username is required. Configure HR_USERNAME on the server." });
   try {
-    const userId = await resolveUserId(getRequestIdentity(req));
-    if (!userId) return res.status(400).json({ error: "A valid user account is required." });
-
-    const [rows] = await pool.query(
-      `SELECT event_id AS id,
-              DATE_FORMAT(event_date, '%Y-%m-%d') AS eventDate,
-              title,
-              TIME_FORMAT(event_time, '%H:%i') AS time,
-              category,
-              description
-         FROM calendar_events
-        WHERE user_id = ?
-        ORDER BY event_date, event_time, event_id`,
-      [userId],
-    );
+    const [rows] = await pool.query(fields + " WHERE hr_username = ? ORDER BY event_date, event_time, event_id", [owner]);
     return res.json(rows);
   } catch (error) {
     console.error("Calendar list error:", error);
-    return res.status(500).json({ error: "Unable to load calendar events." });
+    return res.status(500).json({ error: "Unable to load calendar events. Apply the calendar ownership migration." });
   }
 }
 
 export async function createEvent(req, res) {
+  const owner = ownerFor(req);
+  if (!owner) return res.status(400).json({ error: "HR username is required. Configure HR_USERNAME on the server." });
+  const body = req.body || {};
+  const date = String(body.eventDate ?? body.event_date ?? "").trim();
+  const time = String(body.time ?? body.event_time ?? "").trim();
+  const title = String(body.title ?? "").trim();
+  const category = String(body.category ?? "Work").trim();
+  const description = String(body.description ?? "").trim();
+  const dateValue = new Date(date + "T00:00:00Z");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(dateValue.getTime()) || dateValue.toISOString().slice(0, 10) !== date) return res.status(400).json({ error: "A valid event date is required." });
+  if (!title || title.length > 200) return res.status(400).json({ error: "Enter an event title of 1–200 characters." });
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return res.status(400).json({ error: "A valid event time is required." });
+  if (!["Work", "Personal", "Urgent"].includes(category)) return res.status(400).json({ error: "Invalid event category." });
   try {
-    const { userId, username, employeeId } = getRequestIdentity(req);
-    const { eventDate, title, time, category = "Work", description = "" } = req.body || {};
-    const resolvedUserId = await resolveUserId({ userId, username, employeeId });
-    const cleanTitle = String(title || "").trim();
-    const cleanDate = String(eventDate || "").trim();
-    const cleanTime = String(time || "").trim();
-
-    if (!resolvedUserId) return res.status(400).json({ error: "A valid logged-in user account is required." });
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(cleanDate)) return res.status(400).json({ error: "A valid event date is required." });
-    if (!cleanTitle) return res.status(400).json({ error: "An event title is required." });
-    if (!/^\d{2}:\d{2}$/.test(cleanTime)) return res.status(400).json({ error: "A valid event time is required." });
-
-    const allowedCategories = new Set(["Work", "Personal", "Urgent"]);
-    if (!allowedCategories.has(category)) return res.status(400).json({ error: "Invalid event category." });
-
-    const [result] = await pool.query(
-      `INSERT INTO calendar_events (user_id, event_date, title, event_time, category, description)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [resolvedUserId, cleanDate, cleanTitle, cleanTime, category, String(description || "").trim()],
-    );
-
-    const [rows] = await pool.query(
-      `SELECT event_id AS id,
-              DATE_FORMAT(event_date, '%Y-%m-%d') AS eventDate,
-              title,
-              TIME_FORMAT(event_time, '%H:%i') AS time,
-              category,
-              description
-         FROM calendar_events
-        WHERE event_id = ? AND user_id = ?`,
-      [result.insertId, resolvedUserId],
-    );
-
+    const [result] = await pool.query("INSERT INTO calendar_events (hr_username, event_date, title, event_time, category, description) VALUES (?, ?, ?, ?, ?, ?)", [owner, date, title, time, category, description]);
+    const [rows] = await pool.query(fields + " WHERE event_id = ? AND hr_username = ?", [result.insertId, owner]);
     return res.status(201).json(rows[0]);
   } catch (error) {
     console.error("Calendar create error:", error);
-    const message = process.env.NODE_ENV === "production" ? "Unable to create calendar event." : `Unable to create calendar event: ${error.message}`;
-    return res.status(500).json({ error: message });
+    return res.status(500).json({ error: "Unable to save the event. Apply the calendar ownership migration." });
   }
 }
 
 export async function deleteEvent(req, res) {
+  const owner = ownerFor(req);
+  const id = Number(req.params.id);
+  if (!owner) return res.status(400).json({ error: "HR username is required." });
+  if (!Number.isSafeInteger(id) || id <= 0) return res.status(400).json({ error: "A valid event id is required." });
   try {
-    const eventId = Number(req.params.id);
-    const resolvedUserId = await resolveUserId(getRequestIdentity(req));
-    if (!eventId || !resolvedUserId) return res.status(400).json({ error: "A valid event id and user are required." });
-
-    const [result] = await pool.query("DELETE FROM calendar_events WHERE event_id = ? AND user_id = ?", [eventId, resolvedUserId]);
+    const [result] = await pool.query("DELETE FROM calendar_events WHERE event_id = ? AND hr_username = ?", [id, owner]);
     if (!result.affectedRows) return res.status(404).json({ error: "Event not found." });
     return res.status(204).send();
   } catch (error) {
     console.error("Calendar delete error:", error);
-    return res.status(500).json({ error: "Unable to delete calendar event." });
+    return res.status(500).json({ error: "Unable to delete the event. Apply the calendar ownership migration." });
   }
 }
