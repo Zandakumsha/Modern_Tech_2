@@ -33,4 +33,20 @@ if (calendar && miniCalendar && monthTitle && headerMonth && eventsList && selec
   function showEvents(dateKey) { const list = eventsList, dayEvents = events[dateKey] || []; list.innerHTML = dayEvents.length ? dayEvents.map(e => `<div class="calendar-event"><strong>${escapeHtml(e.title)}</strong><span>${escapeHtml(e.time)} · ${escapeHtml(e.category)}</span><p>${escapeHtml(e.description)}</p><button type="button" data-delete-event="${e.id}">Delete</button></div>`).join("") : "<p>No events for this day.</p>"; list.querySelectorAll("[data-delete-event]").forEach(btn => btn.addEventListener("click", async () => { try { await deleteEvent(btn.dataset.deleteEvent); await loadEvents(); } catch (e) { alert(e.message); } })); }
   eventForm.addEventListener("submit", async event => { event.preventDefault(); if (!selectedDateKey) return alert("Select a date first."); const title = eventTitleInput.value.trim(), time = eventTimeInput.value; if (!title) return alert("Enter an event title."); if (!time) return alert("Select an event time."); const submitButton = eventForm.querySelector("button[type='submit']"); submitButton.disabled = true; submitButton.textContent = "Adding..."; try { await createEvent({ eventDate: selectedDateKey, title, time, category: eventCategoryInput.value, description: eventDescriptionInput.value.trim() }); eventForm.reset(); await loadEvents(); selectDate(selectedDateKey); } catch (error) { console.error("Create calendar event error:", error); alert(error.message || "Unable to create calendar event."); } finally { submitButton.disabled = false; submitButton.textContent = "Add Event"; } });
   loadEvents();
+  // Keep the selected day in sync with the visible month and wire month navigation.
+  const prevMonthButton = document.getElementById("prevMonth");
+  const nextMonthButton = document.getElementById("nextMonth");
+  function moveMonth(offset) {
+    const targetMonth = current.getMonth() + offset;
+    const selectedDayNumber = selectedDateKey ? Number(selectedDateKey.slice(-2)) : 1;
+    current = new Date(current.getFullYear(), targetMonth, 1);
+    const lastDay = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+    selectDate(key(current.getFullYear(), current.getMonth() + 1, Math.min(selectedDayNumber, lastDay)));
+  }
+  prevMonthButton?.addEventListener("click", () => moveMonth(-1));
+  nextMonthButton?.addEventListener("click", () => moveMonth(1));
+
+  // Default to today so event creation works immediately.
+  selectDate(key(current.getFullYear(), current.getMonth() + 1, current.getDate()));
+
 }
