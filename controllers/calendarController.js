@@ -37,7 +37,7 @@ export async function createEvent(req, res) {
     return res.status(201).json(rows[0]);
   } catch (error) {
     console.error("Calendar create error:", error);
-    return res.status(500).json({ error: "Unable to save the event. Check the calendar_events table schema." });
+    const schemaError = ["ER_NO_SUCH_TABLE", "ER_BAD_FIELD_ERROR", "ER_WRONG_VALUE", "ER_TRUNCATED_WRONG_VALUE"].includes(error.code);\n    return res.status(500).json({ error: schemaError ? "The calendar_events database table is missing or does not match the required schema. Run database/calendar-events-migration.sql against the configured database." : "Unable to save the event. Check the server logs for the database error.", code: process.env.NODE_ENV === "production" ? undefined : error.code });
   }
 }
 
