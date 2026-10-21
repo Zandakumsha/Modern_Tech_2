@@ -98,6 +98,7 @@ CREATE TABLE tasks (
 
 CREATE TABLE calendar_events (
   event_id INT AUTO_INCREMENT PRIMARY KEY,
+  hr_username VARCHAR(100) NOT NULL,
   event_date DATE NOT NULL,
   title VARCHAR(200) NOT NULL,
   event_time TIME NOT NULL,
